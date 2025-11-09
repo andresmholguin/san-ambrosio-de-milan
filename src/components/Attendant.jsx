@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { FormAttendant } from "./FormAttendant.jsx";
+import { useFormContext } from "react-hook-form";
 
 export const Attendant = () => {
   const [attendant, setAttendant] = useState(false);
+
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext();
+
   const handleAttendant = (e) => {
     const select = e.target.value;
     if (select === "otro") {
@@ -22,6 +29,7 @@ export const Attendant = () => {
           className="bg-white py-1 ml-4 w-50 rounded-md my-2"
           name="attendant"
           id="attendant"
+          {...register("attendant.select", { required: true })}
         >
           Acudiente
           <option value="">Seleccione</option>
@@ -30,6 +38,9 @@ export const Attendant = () => {
           <option value="otro">Otro</option>
         </select>
       </div>
+      {errors.attendant?.select && (
+        <p className="text-red-500 text-sm">Campo obligatorio</p>
+      )}
       <hr className="my-4 text-Sam" />
       {attendant ? <FormAttendant /> : ""}
     </div>

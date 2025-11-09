@@ -1,9 +1,12 @@
-import { useForm } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 
 export const FormAttendant = () => {
-  const { register } = useForm();
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext();
   return (
-    <form action="" className="flex flex-col gap-2 justify-between">
+    <div className="flex flex-col gap-2 justify-between">
       <div className="md:flex md:gap-3">
         <div className="w-full">
           <label htmlFor="documento">Documento de identidad:</label>
@@ -11,8 +14,11 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="text"
             id="documento"
-            {...register("documento")}
+            {...register("attendant.documento", { required: true })}
           />
+          {errors.attendant?.documento && (
+            <p className="text-red-500 text-sm">Campo obligatorio</p>
+          )}
         </div>
         <div className="w-full">
           <label htmlFor="nombres">Nombres:</label>
@@ -20,8 +26,11 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="text"
             id="nombres"
-            {...register("nombres")}
+            {...register("attendant.nombres", { required: true })}
           />
+          {errors.attendant?.nombres && (
+            <p className="text-red-500 text-sm">Campo obligatorio</p>
+          )}
         </div>
         <div className="w-full">
           <label htmlFor="apellidos">Apellidos:</label>
@@ -29,8 +38,11 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="text"
             id="apellidos"
-            {...register("apellidos")}
+            {...register("attendant.apellidos", { required: true })}
           />
+          {errors.attendant?.apellidos && (
+            <p className="text-red-500 text-sm">Campo obligatorio</p>
+          )}
         </div>
       </div>
       <div className="md:flex md:gap-3">
@@ -40,8 +52,11 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="text"
             id="parentesco"
-            {...register("parentesco")}
+            {...register("attendant.parentesco", { required: true })}
           />
+          {errors.attendant?.parentesco && (
+            <p className="text-red-500 text-sm">Campo obligatorio</p>
+          )}
         </div>
         <div className="w-full">
           <label htmlFor="email">Correo electrónico:</label>
@@ -49,8 +64,11 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="email"
             id="apellidos"
-            {...register("email")}
+            {...register("attendant.email", { required: true })}
           />
+          {errors.attendant?.email && (
+            <p className="text-red-500 text-sm">Campo obligatorio</p>
+          )}
         </div>
         <div className="w-full">
           <label htmlFor="phone">Número de celular</label>
@@ -58,8 +76,11 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="number"
             id="phone"
-            {...register("phone")}
+            {...register("attendant.phone", { required: true })}
           />
+          {errors.attendant?.phone && (
+            <p className="text-red-500 text-sm">Campo obligatorio</p>
+          )}
         </div>
       </div>
       <div className="md:flex md:gap-3">
@@ -69,10 +90,13 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="text"
             id="dirección"
-            {...register("dirección")}
+            {...register("attendant.dirección", { required: true })}
           />
+          {errors.attendant?.dirección && (
+            <p className="text-red-500 text-sm">Campo obligatorio</p>
+          )}
         </div>
       </div>
-    </form>
+    </div>
   );
 };
