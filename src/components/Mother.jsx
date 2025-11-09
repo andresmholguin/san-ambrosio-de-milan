@@ -1,11 +1,11 @@
 import { useForm } from "react-hook-form";
 
-export const Estudent = () => {
+export const Mother = () => {
   const { register } = useForm();
   return (
     <div className="my-4 bg-gray-200 w-full p-4 xl:py-12 rounded-2xl  xl:px-20">
       <h2 className="text-[1.3rem] text-Sam font-semibold">
-        Datos del Estudiante:
+        Datos de la Madre:
       </h2>
       <hr className="my-4 text-Sam" />
       <form action="" className="flex flex-col gap-2 justify-between">
@@ -48,29 +48,26 @@ export const Estudent = () => {
               {...register("nacimiento")}
             />
           </div>
-          <div className="w-full ">
-            <label htmlFor="grado">Grado Actual:</label>
-            <select
+          <div className="w-full">
+            <label htmlFor="email">Correo electrónico:</label>
+            <input
               className="bg-white p-2 w-full rounded-md my-2"
-              id="grado"
-              {...register("grado", { required: true })}
-            >
-              <option value="">Seleccione el grado</option>
-              <option value="primero">Primero</option>
-              <option value="segundo">Segundo</option>
-              <option value="tercero">Tercero</option>
-              <option value="cuarto">Cuarto</option>
-              <option value="quinto">Quinto</option>
-              <option value="sexto1">Sexto-1</option>
-              <option value="sexto2">Sexto-2</option>
-              <option value="septimo1">Septimo-1</option>
-              <option value="septimo2">Septimo-2</option>
-              <option value="octavo">Octavo</option>
-              <option value="noveno">Noveno</option>
-              <option value="decimo">Décimo</option>
-              <option value="once">Once</option>
-            </select>
+              type="email"
+              id="apellidos"
+              {...register("email")}
+            />
           </div>
+          <div className="w-full">
+            <label htmlFor="phone">Número de celular</label>
+            <input
+              className="bg-white p-2 w-full rounded-md my-2"
+              type="number"
+              id="phone"
+              {...register("phone")}
+            />
+          </div>
+        </div>
+        <div className="md:flex md:gap-3">
           <div className="w-full">
             <label htmlFor="dirección">Dirección de Residencia:</label>
             <input
