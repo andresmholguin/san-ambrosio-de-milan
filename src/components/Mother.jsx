@@ -90,14 +90,14 @@ export const Mother = () => {
         </div>
         <div className="md:flex md:gap-3">
           <div className="w-full">
-            <label htmlFor="dirección">Dirección de Residencia:</label>
+            <label htmlFor="direccion">Dirección de Residencia:</label>
             <input
               className="bg-white p-2 w-full rounded-md my-2"
               type="text"
               id="dirección"
-              {...register("mother.dirección", { required: true })}
+              {...register("mother.direccion", { required: true })}
             />
-            {errors.mother?.dirección && (
+            {errors.mother?.direccion && (
               <p className="text-red-500 text-sm">Campo obligatorio</p>
             )}
           </div>

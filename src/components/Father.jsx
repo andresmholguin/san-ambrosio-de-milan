@@ -66,8 +66,15 @@ export const Father = () => {
             <input
               className="bg-white p-2 w-full rounded-md my-2"
               type="email"
+              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
               id="apellidos"
-              {...register("father.email", { required: true })}
+              {...register("father.email", {
+                required: true,
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "Invalid email address",
+                },
+              })}
             />
             {errors.father?.email && (
               <p className="text-red-500 text-sm">Campo obligatorio</p>
@@ -77,7 +84,7 @@ export const Father = () => {
             <label htmlFor="phone">Número de celular</label>
             <input
               className="bg-white p-2 w-full rounded-md my-2"
-              type="number"
+              type="tel"
               id="phone"
               {...register("father.phone", { required: true })}
             />
@@ -88,12 +95,12 @@ export const Father = () => {
         </div>
         <div className="md:flex md:gap-3">
           <div className="w-full">
-            <label htmlFor="dirección">Dirección de Residencia:</label>
+            <label htmlFor="direccion">Dirección de Residencia:</label>
             <input
               className="bg-white p-2 w-full rounded-md my-2"
               type="text"
               id="dirección"
-              {...register("father.dirección", { required: true })}
+              {...register("father.direccion", { required: true })}
             />
             {errors.father?.dirección && (
               <p className="text-red-500 text-sm">Campo obligatorio</p>

@@ -90,7 +90,7 @@ export const Estudent = () => {
             )}
           </div>
           <div className="w-full">
-            <label htmlFor="dirección">Dirección de Residencia:</label>
+            <label htmlFor="direccion">Dirección de Residencia:</label>
             <input
               className="bg-white p-2 w-full rounded-md my-2"
               type="text"

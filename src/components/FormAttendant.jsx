@@ -85,14 +85,14 @@ export const FormAttendant = () => {
       </div>
       <div className="md:flex md:gap-3">
         <div className="w-full">
-          <label htmlFor="dirección">Dirección de Residencia:</label>
+          <label htmlFor="direccion">Dirección de Residencia:</label>
           <input
             className="bg-white p-2 w-full rounded-md my-2"
             type="text"
             id="dirección"
-            {...register("attendant.dirección", { required: true })}
+            {...register("attendant.direccion", { required: true })}
           />
-          {errors.attendant?.dirección && (
+          {errors.attendant?.direccion && (
             <p className="text-red-500 text-sm">Campo obligatorio</p>
           )}
         </div>

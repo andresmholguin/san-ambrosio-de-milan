@@ -6,10 +6,33 @@ import { Estudent } from "./components/Estudent";
 import { Father } from "./components/Father";
 import { Mother } from "./components/Mother";
 import { Attendant } from "./components/Attendant";
+import { useEffect } from "react";
 
 function App() {
-  const methods = useForm();
-  const { handleSubmit } = methods;
+  const methods = useForm({
+    defaultValues: {
+      student: {
+        direccion: "",
+      },
+      father: {
+        direccion: "",
+      },
+      mother: {
+        direccion: "",
+      },
+      Attendant: {
+        direccion: "",
+      },
+    },
+  });
+  const { handleSubmit, watch, setValue } = methods;
+
+  useEffect(() => {
+    const studentDireccion = watch("student.direccion");
+    setValue("father.direccion", studentDireccion);
+    setValue("mother.direccion", studentDireccion);
+    setValue("attendant.direccion", studentDireccion);
+  }, [watch("student.direccion")]);
 
   const onSubmit = (data) => {
     console.log("Datos del formulario:", data);
