@@ -64,7 +64,13 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="email"
             id="apellidos"
-            {...register("attendant.email", { required: true })}
+            {...register("attendant.email", {
+              required: true,
+              pattern: {
+                value: /^[a-z0-9._%+ -]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
+                message: "Correo inválido",
+              },
+            })}
           />
           {errors.attendant?.email && (
             <p className="text-red-500 text-sm">Campo obligatorio</p>

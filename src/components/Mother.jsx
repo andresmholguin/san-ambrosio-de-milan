@@ -57,7 +57,13 @@ export const Mother = () => {
               className="bg-white p-2 w-full rounded-md my-2"
               type="date"
               id="nacimiento"
-              {...register("mother.nacimiento", { required: true })}
+              {...register("mother.nacimiento", {
+                required: true,
+                pattern: {
+                  value: /^[a-z0-9._%+ -]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
+                  message: "Correo inválido",
+                },
+              })}
             />
             {errors.mother?.nacimiento && (
               <p className="text-red-500 text-sm">Campo obligatorio</p>
