@@ -9,6 +9,8 @@ export const Attendant = () => {
   } = useFormContext();
 
   const attendantSelect = watch("attendant.select");
+  const fatherID = watch("father.documento");
+  const motherID = watch("mother.documento");
 
   return (
     <div className="my-4 bg-gray-200 w-full p-4 xl:py-12 rounded-2xl  xl:px-20">
@@ -22,8 +24,8 @@ export const Attendant = () => {
         >
           Acudiente
           <option value="">Seleccione</option>
-          <option value="padre">Padre</option>
-          <option value="madre">Madre</option>
+          {fatherID && <option value="padre">Padre</option>}
+          {motherID && <option value="madre">Madre</option>}
           <option value="otro">Otro</option>
         </select>
       </div>
