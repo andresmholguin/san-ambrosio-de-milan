@@ -38,25 +38,43 @@ function App() {
   const onSubmit = async (data) => {
     console.log("Datos del formulario:", data);
 
-    const father = {
-      document_father: data.father.documento.toUpperCase(),
-      name_father: data.father.nombres.toUpperCase(),
-      lastName_father: data.father.apellidos.toUpperCase(),
-      date_father: data.father.nacimiento,
-      email_father: data.father.email,
-      phone_father: data.father.phone,
-      addres_father: data.father.direccion.toUpperCase(),
-    };
+    if (data.father.documento) {
+      const father = {
+        document_father: data.father.documento.toUpperCase(),
+        name_father: data.father.nombres.toUpperCase(),
+        lastName_father: data.father.apellidos.toUpperCase(),
+        date_father: data.father.nacimiento,
+        email_father: data.father.email,
+        phone_father: data.father.phone,
+        addres_father: data.father.direccion.toUpperCase(),
+      };
+      const { errorFather } = await Supabase.from("fathers")
+        .insert([father])
+        .select();
+      if (errorFather) {
+        // console.log("Error inserting data:", errorFather);
+        alert("No se pudo registrar el asistente.", errorFather);
+      }
+    }
 
-    const mother = {
-      document_mother: data.mother.documento,
-      name_mother: data.mother.nombres.toUpperCase(),
-      lastName_mother: data.mother.apellidos.toUpperCase(),
-      date_mother: data.mother.nacimiento,
-      email_mother: data.mother.email,
-      phone_mother: data.mother.phone,
-      addres_mother: data.mother.direccion.toUpperCase(),
-    };
+    if (data.mother.documento) {
+      const mother = {
+        document_mother: data.mother.documento,
+        name_mother: data.mother.nombres.toUpperCase(),
+        lastName_mother: data.mother.apellidos.toUpperCase(),
+        date_mother: data.mother.nacimiento,
+        email_mother: data.mother.email,
+        phone_mother: data.mother.phone,
+        addres_mother: data.mother.direccion.toUpperCase(),
+      };
+      const { errorMother } = await Supabase.from("mothers")
+        .insert([mother])
+        .select();
+      if (errorMother) {
+        // console.log("Error inserting data:", errorMother);
+        alert("No se pudo registrar el asistente.", errorMother);
+      }
+    }
 
     if (data.attendant.select === "otro") {
       const attendant = {
@@ -90,22 +108,6 @@ function App() {
       id_attendant: data.attendant.documento ? data.attendant.documento : null,
     };
 
-    const { errorFather } = await Supabase.from("fathers")
-      .insert([father])
-      .select();
-    if (errorFather) {
-      // console.log("Error inserting data:", errorFather);
-      alert("No se pudo registrar el asistente.", errorFather);
-    }
-
-    const { errorMother } = await Supabase.from("mothers")
-      .insert([mother])
-      .select();
-    if (errorMother) {
-      // console.log("Error inserting data:", errorMother);
-      alert("No se pudo registrar el asistente.", errorMother);
-    }
-
     const { errorStudent } = await Supabase.from("students")
       .insert([student])
       .select();
@@ -114,7 +116,7 @@ function App() {
       alert("No se pudo registrar el asistente.", errorStudent);
     }
 
-    alert("Datos actualizados!");
+    alert("Datos agregados!");
 
     reset();
   };

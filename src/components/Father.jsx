@@ -1,10 +1,7 @@
 import { useFormContext } from "react-hook-form";
 
 export const Father = () => {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext();
+  const { register } = useFormContext();
   return (
     <div className="my-4 bg-gray-200 w-full p-4 xl:py-12 rounded-2xl  xl:px-20">
       <h2 className="text-[1.3rem] text-Sam font-semibold">Datos del Padre:</h2>
@@ -17,11 +14,8 @@ export const Father = () => {
               className="bg-white p-2 w-full rounded-md my-2"
               type="text"
               id="documento"
-              {...register("father.documento", { required: true })}
+              {...register("father.documento")}
             />
-            {errors.father?.documento && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
           <div className="w-full">
             <label htmlFor="nombres">Nombres:</label>
@@ -29,11 +23,8 @@ export const Father = () => {
               className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="nombres"
-              {...register("father.nombres", { required: true })}
+              {...register("father.nombres")}
             />
-            {errors.father?.nombres && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
           <div className="w-full">
             <label htmlFor="apellidos">Apellidos:</label>
@@ -41,11 +32,8 @@ export const Father = () => {
               className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="apellidos"
-              {...register("father.apellidos", { required: true })}
+              {...register("father.apellidos")}
             />
-            {errors.father?.apellidos && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
         </div>
         <div className="md:flex md:gap-3">
@@ -55,11 +43,8 @@ export const Father = () => {
               className="bg-white p-2 w-full rounded-md my-2"
               type="date"
               id="nacimiento"
-              {...register("father.nacimiento", { required: true })}
+              {...register("father.nacimiento")}
             />
-            {errors.father?.nacimiento && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
           <div className="w-full">
             <label htmlFor="email">Correo electrónico:</label>
@@ -75,9 +60,6 @@ export const Father = () => {
                 },
               })}
             />
-            {errors.father?.email && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
           <div className="w-full">
             <label htmlFor="phone">Número de celular</label>
@@ -85,11 +67,8 @@ export const Father = () => {
               className="bg-white p-2 w-full rounded-md my-2"
               type="tel"
               id="phone"
-              {...register("father.phone", { required: true })}
+              {...register("father.phone")}
             />
-            {errors.father?.phone && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
         </div>
         <div className="md:flex md:gap-3">
@@ -99,11 +78,8 @@ export const Father = () => {
               className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="dirección"
-              {...register("father.direccion", { required: true })}
+              {...register("father.direccion")}
             />
-            {errors.father?.dirección && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
         </div>
       </div>

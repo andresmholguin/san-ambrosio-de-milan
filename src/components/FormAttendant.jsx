@@ -1,10 +1,7 @@
 import { useFormContext } from "react-hook-form";
 
 export const FormAttendant = () => {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext();
+  const { register } = useFormContext();
   return (
     <div className="flex flex-col gap-2 justify-between">
       <div className="md:flex md:gap-3">
@@ -14,11 +11,8 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="text"
             id="documento"
-            {...register("attendant.documento", { required: true })}
+            {...register("attendant.documento")}
           />
-          {errors.attendant?.documento && (
-            <p className="text-red-500 text-sm">Campo obligatorio</p>
-          )}
         </div>
         <div className="w-full">
           <label htmlFor="nombres">Nombres:</label>
@@ -26,11 +20,8 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2 uppercase"
             type="text"
             id="nombres"
-            {...register("attendant.nombres", { required: true })}
+            {...register("attendant.nombres")}
           />
-          {errors.attendant?.nombres && (
-            <p className="text-red-500 text-sm">Campo obligatorio</p>
-          )}
         </div>
         <div className="w-full">
           <label htmlFor="apellidos">Apellidos:</label>
@@ -38,11 +29,8 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2 uppercase"
             type="text"
             id="apellidos"
-            {...register("attendant.apellidos", { required: true })}
+            {...register("attendant.apellidos")}
           />
-          {errors.attendant?.apellidos && (
-            <p className="text-red-500 text-sm">Campo obligatorio</p>
-          )}
         </div>
       </div>
       <div className="md:flex md:gap-3">
@@ -52,11 +40,8 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2 uppercase"
             type="text"
             id="parentesco"
-            {...register("attendant.parentesco", { required: true })}
+            {...register("attendant.parentesco")}
           />
-          {errors.attendant?.parentesco && (
-            <p className="text-red-500 text-sm">Campo obligatorio</p>
-          )}
         </div>
         <div className="w-full">
           <label htmlFor="email">Correo electrónico:</label>
@@ -72,9 +57,6 @@ export const FormAttendant = () => {
               },
             })}
           />
-          {errors.attendant?.email && (
-            <p className="text-red-500 text-sm">Campo obligatorio</p>
-          )}
         </div>
         <div className="w-full">
           <label htmlFor="phone">Número de celular</label>
@@ -82,11 +64,8 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="number"
             id="phone"
-            {...register("attendant.phone", { required: true })}
+            {...register("attendant.phone")}
           />
-          {errors.attendant?.phone && (
-            <p className="text-red-500 text-sm">Campo obligatorio</p>
-          )}
         </div>
       </div>
       <div className="md:flex md:gap-3">
@@ -96,11 +75,8 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2 uppercase"
             type="text"
             id="dirección"
-            {...register("attendant.direccion", { required: true })}
+            {...register("attendant.direccion")}
           />
-          {errors.attendant?.direccion && (
-            <p className="text-red-500 text-sm">Campo obligatorio</p>
-          )}
         </div>
       </div>
     </div>

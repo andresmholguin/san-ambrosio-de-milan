@@ -1,10 +1,7 @@
 import { useFormContext } from "react-hook-form";
 
 export const Mother = () => {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext();
+  const { register } = useFormContext();
   return (
     <div className="my-4 bg-gray-200 w-full p-4 xl:py-12 rounded-2xl  xl:px-20">
       <h2 className="text-[1.3rem] text-Sam font-semibold">
@@ -19,11 +16,8 @@ export const Mother = () => {
               className="bg-white p-2 w-full rounded-md my-2"
               type="text"
               id="documento"
-              {...register("mother.documento", { required: true })}
+              {...register("mother.documento")}
             />
-            {errors.mother?.documento && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
           <div className="w-full">
             <label htmlFor="nombres">Nombres:</label>
@@ -31,11 +25,8 @@ export const Mother = () => {
               className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="nombres"
-              {...register("mother.nombres", { required: true })}
+              {...register("mother.nombres")}
             />
-            {errors.mother?.nombres && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
           <div className="w-full">
             <label htmlFor="apellidos">Apellidos:</label>
@@ -43,11 +34,8 @@ export const Mother = () => {
               className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="apellidos"
-              {...register("mother.apellidos", { required: true })}
+              {...register("mother.apellidos")}
             />
-            {errors.mother?.apellidos && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
         </div>
         <div className="md:flex md:gap-3">
@@ -61,9 +49,6 @@ export const Mother = () => {
                 required: true,
               })}
             />
-            {errors.mother?.nacimiento && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
           <div className="w-full">
             <label htmlFor="email">Correo electrónico:</label>
@@ -79,9 +64,6 @@ export const Mother = () => {
                 },
               })}
             />
-            {errors.mother?.email && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
           <div className="w-full">
             <label htmlFor="phone">Número de celular</label>
@@ -89,11 +71,8 @@ export const Mother = () => {
               className="bg-white p-2 w-full rounded-md my-2"
               type="number"
               id="phone"
-              {...register("mother.phone", { required: true })}
+              {...register("mother.phone")}
             />
-            {errors.mother?.phone && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
         </div>
         <div className="md:flex md:gap-3">
@@ -103,11 +82,8 @@ export const Mother = () => {
               className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="dirección"
-              {...register("mother.direccion", { required: true })}
+              {...register("mother.direccion")}
             />
-            {errors.mother?.direccion && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
         </div>
       </div>
