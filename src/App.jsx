@@ -68,15 +68,12 @@ function App() {
         phone_attendant: data.attendant.phone,
         addres_attendant: data.attendant.direccion.toUpperCase(),
       };
-      const { dataAttendant, errorAttendant } = await Supabase.from("attendant")
+      const { errorAttendant } = await Supabase.from("attendant")
         .insert([attendant])
         .select();
       if (errorAttendant) {
         // console.log("Error inserting data:", errorAttendant);
         alert("No se pudo registrar el asistente.", errorAttendant);
-      } else {
-        // console.log("Data inserted successfully:", dataMother);
-        alert("Registro exitoso.", dataAttendant);
       }
     }
 
@@ -93,38 +90,31 @@ function App() {
       id_attendant: data.attendant.documento ? data.attendant.documento : null,
     };
 
-    const { dataFather, errorFather } = await Supabase.from("fathers")
+    const { errorFather } = await Supabase.from("fathers")
       .insert([father])
       .select();
     if (errorFather) {
       // console.log("Error inserting data:", errorFather);
       alert("No se pudo registrar el asistente.", errorFather);
-    } else {
-      // console.log("Data inserted successfully:", dataFather);
-      alert("Registro exitoso.", dataFather);
     }
 
-    const { dataMother, errorMother } = await Supabase.from("mothers")
+    const { errorMother } = await Supabase.from("mothers")
       .insert([mother])
       .select();
     if (errorMother) {
       // console.log("Error inserting data:", errorMother);
       alert("No se pudo registrar el asistente.", errorMother);
-    } else {
-      // console.log("Data inserted successfully:", dataMother);
-      alert("Registro exitoso.", dataMother);
     }
 
-    const { dataStudent, errorStudent } = await Supabase.from("students")
+    const { errorStudent } = await Supabase.from("students")
       .insert([student])
       .select();
     if (errorStudent) {
       // console.log("Error inserting data:", errorStudent);
       alert("No se pudo registrar el asistente.", errorStudent);
-    } else {
-      // console.log("Data inserted successfully:", dataStudent);
-      alert("Registro exitoso.", dataStudent);
     }
+
+    alert("Datos actualizados!");
 
     reset();
   };
