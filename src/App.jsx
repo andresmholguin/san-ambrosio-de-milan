@@ -40,13 +40,13 @@ function App() {
 
     if (data.father.documento) {
       const father = {
-        document_father: data.father.documento.toUpperCase(),
-        name_father: data.father.nombres.toUpperCase(),
-        lastName_father: data.father.apellidos.toUpperCase(),
+        document_father: data.father.documento.toUpperCase().trim(),
+        name_father: data.father.nombres.toUpperCase().trim(),
+        lastName_father: data.father.apellidos.toUpperCase().trim(),
         date_father: data.father.nacimiento,
-        email_father: data.father.email,
-        phone_father: data.father.phone,
-        addres_father: data.father.direccion.toUpperCase(),
+        email_father: data.father.email.trim(),
+        phone_father: data.father.phone.trim(),
+        addres_father: data.father.direccion.toUpperCase().trim(),
       };
       const { errorFather } = await Supabase.from("fathers")
         .insert([father])
@@ -59,13 +59,13 @@ function App() {
 
     if (data.mother.documento) {
       const mother = {
-        document_mother: data.mother.documento,
-        name_mother: data.mother.nombres.toUpperCase(),
-        lastName_mother: data.mother.apellidos.toUpperCase(),
+        document_mother: data.mother.documento.toUpperCase().trim(),
+        name_mother: data.mother.nombres.toUpperCase().trim(),
+        lastName_mother: data.mother.apellidos.toUpperCase().trim(),
         date_mother: data.mother.nacimiento,
-        email_mother: data.mother.email,
-        phone_mother: data.mother.phone,
-        addres_mother: data.mother.direccion.toUpperCase(),
+        email_mother: data.mother.email.trim(),
+        phone_mother: data.mother.phone.trim(),
+        addres_mother: data.mother.direccion.toUpperCase().trim(),
       };
       const { errorMother } = await Supabase.from("mothers")
         .insert([mother])
@@ -78,13 +78,13 @@ function App() {
 
     if (data.attendant.select === "otro") {
       const attendant = {
-        document_attendant: data.attendant.documento,
-        name_attendant: data.attendant.nombres.toUpperCase(),
-        lastName_attendant: data.attendant.apellidos.toUpperCase(),
-        relationship_attendant: data.attendant.parentesco.toUpperCase(),
-        email_attendant: data.attendant.email,
-        phone_attendant: data.attendant.phone,
-        addres_attendant: data.attendant.direccion.toUpperCase(),
+        document_attendant: data.attendant.documento.toUpperCase().trim(),
+        name_attendant: data.attendant.nombres.toUpperCase().trim(),
+        lastName_attendant: data.attendant.apellidos.toUpperCase().trim(),
+        relationship_attendant: data.attendant.parentesco.toUpperCase().trim(),
+        email_attendant: data.attendant.email.trim(),
+        phone_attendant: data.attendant.phone.trim(),
+        addres_attendant: data.attendant.direccion.toUpperCase().trim(),
       };
       const { errorAttendant } = await Supabase.from("attendant")
         .insert([attendant])
@@ -96,13 +96,13 @@ function App() {
     }
 
     const student = {
-      document_student: data.student.documento,
-      name_student: data.student.nombres.toUpperCase(),
-      lastName_student: data.student.apellidos.toUpperCase(),
+      document_student: data.student.documento.toUpperCase().trim(),
+      name_student: data.student.nombres.toUpperCase().trim(),
+      lastName_student: data.student.apellidos.toUpperCase().trim(),
       date_student: data.student.nacimiento,
-      addres_student: data.student.direccion.toUpperCase(),
-      grade_student: data.student.grado,
-      attendant: data.attendant.select,
+      addres_student: data.student.direccion.toUpperCase().trim(),
+      grade_student: data.student.grado.trim(),
+      attendant: data.attendant.select.trim(),
       id_father: data.father.documento,
       id_mother: data.mother.documento,
       id_attendant: data.attendant.documento ? data.attendant.documento : null,

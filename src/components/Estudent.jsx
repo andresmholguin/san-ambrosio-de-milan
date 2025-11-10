@@ -1,10 +1,60 @@
+import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
+import Supabase from "../Supabase";
 
 export const Estudent = () => {
+  const [document, setDocument] = useState("");
+  const [studentData, setStudentData] = useState(null);
+
   const {
     register,
+    setValue,
     formState: { errors },
   } = useFormContext();
+
+  // 🔍 Buscar estudiante por documento
+  const readStudentData = async (doc) => {
+    if (!doc || doc.trim().length < 5) return; // evita búsquedas con menos de 5 caracteres
+
+    const { data: students, error } = await Supabase.from("students")
+      .select("*")
+      .eq("document_student", doc)
+      .maybeSingle(); // devuelve un único registro o null
+
+    if (error) {
+      console.error("Error al leer estudiante:", error);
+      setStudentData(null);
+      return;
+    }
+
+    setStudentData(students || null);
+  };
+
+  // ⏳ Espera un poco antes de consultar (debounce)
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      console.log("inicio busqueda estudiante");
+      readStudentData(document);
+    }, 500);
+    return () => clearTimeout(delay);
+  }, [document]);
+
+  // 🧩 Actualiza los campos del formulario cuando cambie studentData
+  useEffect(() => {
+    if (studentData) {
+      setValue("student.nombres", studentData.name_student || "");
+      setValue("student.apellidos", studentData.lastName_student || "");
+      setValue("student.grado", studentData.grade_student || "");
+      setValue("student.nacimiento", studentData.date_student || "");
+      setValue("student.direccion", studentData.addres_student || "");
+    } else {
+      // Limpia si no hay resultados
+      setValue("student.nombres", "");
+      setValue("student.apellidos", "");
+      setValue("student.grado", "");
+    }
+  }, [studentData, setValue]);
+
   return (
     <div className="my-4 bg-gray-200 w-full p-4 xl:py-12 rounded-2xl  xl:px-20">
       <h2 className="text-[1.3rem] text-Sam font-semibold">
@@ -19,7 +69,10 @@ export const Estudent = () => {
               className="bg-white p-2 w-full rounded-md my-2"
               type="text"
               id="documento"
-              {...register("student.documento", { required: true })}
+              {...register("student.documento", {
+                required: true,
+                onBlur: (e) => setDocument(e.target.value),
+              })}
             />
             {errors.student?.documento && (
               <p className="text-red-500 text-sm">Campo obligatorio</p>
