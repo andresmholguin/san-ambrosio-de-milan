@@ -28,7 +28,7 @@ export const Estudent = () => {
           <div className="w-full">
             <label htmlFor="nombres">Nombres:</label>
             <input
-              className="bg-white p-2 w-full rounded-md my-2"
+              className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="nombres"
               {...register("student.nombres", { required: true })}
@@ -40,7 +40,7 @@ export const Estudent = () => {
           <div className="w-full">
             <label htmlFor="apellidos">Apellidos:</label>
             <input
-              className="bg-white p-2 w-full rounded-md my-2"
+              className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="apellidos"
               {...register("student.apellidos", { required: true })}
@@ -92,7 +92,7 @@ export const Estudent = () => {
           <div className="w-full">
             <label htmlFor="direccion">Dirección de Residencia:</label>
             <input
-              className="bg-white p-2 w-full rounded-md my-2"
+              className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="dirección"
               {...register("student.direccion", { required: true })}

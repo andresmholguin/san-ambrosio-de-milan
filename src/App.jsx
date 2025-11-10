@@ -7,6 +7,7 @@ import { Father } from "./components/Father";
 import { Mother } from "./components/Mother";
 import { Attendant } from "./components/Attendant";
 import { useEffect } from "react";
+import Supabase from "./Supabase";
 
 function App() {
   const methods = useForm({
@@ -20,12 +21,12 @@ function App() {
       mother: {
         direccion: "",
       },
-      Attendant: {
+      attendant: {
         direccion: "",
       },
     },
   });
-  const { handleSubmit, watch, setValue } = methods;
+  const { handleSubmit, watch, setValue, reset } = methods;
 
   useEffect(() => {
     const studentDireccion = watch("student.direccion");
@@ -34,8 +35,98 @@ function App() {
     setValue("attendant.direccion", studentDireccion);
   }, [watch("student.direccion")]);
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     console.log("Datos del formulario:", data);
+
+    const father = {
+      document_father: data.father.documento.toUpperCase(),
+      name_father: data.father.nombres.toUpperCase(),
+      lastName_father: data.father.apellidos.toUpperCase(),
+      date_father: data.father.nacimiento,
+      email_father: data.father.email,
+      phone_father: data.father.phone,
+      addres_father: data.father.direccion.toUpperCase(),
+    };
+
+    const mother = {
+      document_mother: data.mother.documento,
+      name_mother: data.mother.nombres.toUpperCase(),
+      lastName_mother: data.mother.apellidos.toUpperCase(),
+      date_mother: data.mother.nacimiento,
+      email_mother: data.mother.email,
+      phone_mother: data.mother.phone,
+      addres_mother: data.mother.direccion.toUpperCase(),
+    };
+
+    if (data.attendant.select === "otro") {
+      const attendant = {
+        document_attendant: data.attendant.documento,
+        name_attendant: data.attendant.nombres.toUpperCase(),
+        lastName_attendant: data.attendant.apellidos.toUpperCase(),
+        relationship_attendant: data.attendant.parentesco.toUpperCase(),
+        email_attendant: data.attendant.email,
+        phone_attendant: data.attendant.phone,
+        addres_attendant: data.attendant.direccion.toUpperCase(),
+      };
+      const { dataAttendant, errorAttendant } = await Supabase.from("attendant")
+        .insert([attendant])
+        .select();
+      if (errorAttendant) {
+        // console.log("Error inserting data:", errorAttendant);
+        alert("No se pudo registrar el asistente.", errorAttendant);
+      } else {
+        // console.log("Data inserted successfully:", dataMother);
+        alert("Registro exitoso.", dataAttendant);
+      }
+    }
+
+    const student = {
+      document_student: data.student.documento,
+      name_student: data.student.nombres.toUpperCase(),
+      lastName_student: data.student.apellidos.toUpperCase(),
+      date_student: data.student.nacimiento,
+      addres_student: data.student.direccion.toUpperCase(),
+      grade_student: data.student.grado,
+      attendant: data.attendant.select,
+      id_father: data.father.documento,
+      id_mother: data.mother.documento,
+      id_attendant: data.attendant.documento ? data.attendant.documento : null,
+    };
+
+    const { dataFather, errorFather } = await Supabase.from("fathers")
+      .insert([father])
+      .select();
+    if (errorFather) {
+      // console.log("Error inserting data:", errorFather);
+      alert("No se pudo registrar el asistente.", errorFather);
+    } else {
+      // console.log("Data inserted successfully:", dataFather);
+      alert("Registro exitoso.", dataFather);
+    }
+
+    const { dataMother, errorMother } = await Supabase.from("mothers")
+      .insert([mother])
+      .select();
+    if (errorMother) {
+      // console.log("Error inserting data:", errorMother);
+      alert("No se pudo registrar el asistente.", errorMother);
+    } else {
+      // console.log("Data inserted successfully:", dataMother);
+      alert("Registro exitoso.", dataMother);
+    }
+
+    const { dataStudent, errorStudent } = await Supabase.from("students")
+      .insert([student])
+      .select();
+    if (errorStudent) {
+      // console.log("Error inserting data:", errorStudent);
+      alert("No se pudo registrar el asistente.", errorStudent);
+    } else {
+      // console.log("Data inserted successfully:", dataStudent);
+      alert("Registro exitoso.", dataStudent);
+    }
+
+    reset();
   };
   return (
     <>

@@ -26,7 +26,7 @@ export const Father = () => {
           <div className="w-full">
             <label htmlFor="nombres">Nombres:</label>
             <input
-              className="bg-white p-2 w-full rounded-md my-2"
+              className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="nombres"
               {...register("father.nombres", { required: true })}
@@ -38,7 +38,7 @@ export const Father = () => {
           <div className="w-full">
             <label htmlFor="apellidos">Apellidos:</label>
             <input
-              className="bg-white p-2 w-full rounded-md my-2"
+              className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="apellidos"
               {...register("father.apellidos", { required: true })}
@@ -64,9 +64,8 @@ export const Father = () => {
           <div className="w-full">
             <label htmlFor="email">Correo electrónico:</label>
             <input
-              className="bg-white p-2 w-full rounded-md my-2"
+              className="bg-white p-2 w-full rounded-md my-2 lowercase"
               type="email"
-              pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
               id="apellidos"
               {...register("father.email", {
                 required: true,
@@ -97,7 +96,7 @@ export const Father = () => {
           <div className="w-full">
             <label htmlFor="direccion">Dirección de Residencia:</label>
             <input
-              className="bg-white p-2 w-full rounded-md my-2"
+              className="bg-white p-2 w-full rounded-md my-2 uppercase"
               type="text"
               id="dirección"
               {...register("father.direccion", { required: true })}
