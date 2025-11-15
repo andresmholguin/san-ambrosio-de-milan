@@ -79,6 +79,7 @@ function App() {
             ).insert([father]);
 
             if (errorFather) {
+              console.log("Error al insertar padre:", errorFather);
               alert("No se pudo registrar el padre.");
               return;
             }
@@ -183,9 +184,9 @@ function App() {
           alert("El estudiante ya está registrado.");
           return;
         } else {
-          insertFather();
-          insertMother();
-          insertAttendant();
+          await insertFather();
+          await insertMother();
+          await insertAttendant();
           const student = {
             document_student: data.student.documento.toUpperCase().trim(),
             name_student: data.student.nombres.toUpperCase().trim(),
