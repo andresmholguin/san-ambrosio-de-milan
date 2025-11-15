@@ -6,11 +6,7 @@ export const FormAttendant = () => {
   const [document, setDocument] = useState("");
   const [attendantData, setAttendantData] = useState(null);
 
-  const {
-    register,
-    setValue,
-    formState: { errors },
-  } = useFormContext();
+  const { register, setValue } = useFormContext();
 
   // 🔍 Buscar estudiante por documento
   const readAttendantData = async (doc) => {
@@ -69,9 +65,6 @@ export const FormAttendant = () => {
               onBlur: (e) => setDocument(e.target.value),
             })}
           />
-          {errors.father?.documento && (
-            <p className="text-red-500 text-sm">Campo obligatorio</p>
-          )}
         </div>
         <div className="w-full">
           <label htmlFor="nombres">Nombres:</label>

@@ -6,11 +6,7 @@ export const Mother = () => {
   const [document, setDocument] = useState("");
   const [motherData, setMotherData] = useState(null);
 
-  const {
-    register,
-    setValue,
-    formState: { errors },
-  } = useFormContext();
+  const { register, setValue } = useFormContext();
 
   // 🔍 Buscar estudiante por documento
   const readMotherData = async (doc) => {
@@ -74,9 +70,6 @@ export const Mother = () => {
                 onBlur: (e) => setDocument(e.target.value),
               })}
             />
-            {errors.father?.documento && (
-              <p className="text-red-500 text-sm">Campo obligatorio</p>
-            )}
           </div>
           <div className="w-full">
             <label htmlFor="nombres">Nombres:</label>
