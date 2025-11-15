@@ -1,7 +1,60 @@
 import { useFormContext } from "react-hook-form";
+import { useState, useEffect } from "react";
+import Supabase from "../Supabase";
 
 export const FormAttendant = () => {
-  const { register } = useFormContext();
+  const [document, setDocument] = useState("");
+  const [attendantData, setAttendantData] = useState(null);
+
+  const {
+    register,
+    setValue,
+    formState: { errors },
+  } = useFormContext();
+
+  // 🔍 Buscar estudiante por documento
+  const readAttendantData = async (doc) => {
+    if (!doc || doc.trim().length < 5) return; // evita búsquedas con menos de 5 caracteres
+
+    const { data: attendant, error } = await Supabase.from("attendant")
+      .select("*")
+      .eq("document_attendant", doc)
+      .maybeSingle(); // devuelve un único registro o null
+
+    if (error) {
+      console.error("Error al leer acompañante:", error);
+      setAttendantData(null);
+      return;
+    }
+
+    setAttendantData(attendant || null);
+  };
+
+  // ⏳ Espera un poco antes de consultar (debounce)
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      console.log("inicio busqueda Acompañante");
+      readAttendantData(document);
+    }, 100);
+    return () => clearTimeout(delay);
+  }, [document]);
+
+  // 🧩 Actualiza los campos del formulario cuando cambie studentData
+  useEffect(() => {
+    if (attendantData) {
+      setValue("attendant.nombres", attendantData.name_attendant || "");
+      setValue("attendant.apellidos", attendantData.lastName_attendant || "");
+      setValue("attendant.email", attendantData.email_attendant || "");
+      setValue("attendant.nacimiento", attendantData.date_attendant || "");
+      setValue("attendant.direccion", attendantData.addres_attendant || "");
+      setValue("attendant.phone", attendantData.phone_attendant || "");
+    } else {
+      // Limpia si no hay resultados
+      setValue("attendant.nombres", "");
+      setValue("attendant.apellidos", "");
+      setValue("attendant.grado", "");
+    }
+  }, [attendantData, setValue]);
   return (
     <div className="flex flex-col gap-2 justify-between">
       <div className="md:flex md:gap-3">
@@ -11,8 +64,14 @@ export const FormAttendant = () => {
             className="bg-white p-2 w-full rounded-md my-2"
             type="text"
             id="documento"
-            {...register("attendant.documento")}
+            {...register("attendant.documento", {
+              required: true,
+              onBlur: (e) => setDocument(e.target.value),
+            })}
           />
+          {errors.father?.documento && (
+            <p className="text-red-500 text-sm">Campo obligatorio</p>
+          )}
         </div>
         <div className="w-full">
           <label htmlFor="nombres">Nombres:</label>
