@@ -28,6 +28,7 @@ export const FormAttendant = () => {
 
   // ⏳ Espera un poco antes de consultar (debounce)
   useEffect(() => {
+    if (!document || document.trim() === "") return;
     const delay = setTimeout(() => {
       console.log("inicio busqueda Acompañante");
       readAttendantData(document);
@@ -61,7 +62,6 @@ export const FormAttendant = () => {
             type="text"
             id="documento"
             {...register("attendant.documento", {
-              required: true,
               onBlur: (e) => setDocument(e.target.value),
             })}
           />
@@ -102,7 +102,6 @@ export const FormAttendant = () => {
             type="email"
             id="apellidos"
             {...register("attendant.email", {
-              required: true,
               pattern: {
                 value: /^[a-z0-9._%+ -]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
                 message: "Correo inválido",

@@ -32,6 +32,7 @@ export const Estudent = () => {
 
   // ⏳ Espera un poco antes de consultar (debounce)
   useEffect(() => {
+    if (!document || document.trim() === "") return;
     const delay = setTimeout(() => {
       console.log("inicio busqueda estudiante");
       readStudentData(document);

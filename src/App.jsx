@@ -12,114 +12,215 @@ import Supabase from "./Supabase";
 function App() {
   const methods = useForm({
     defaultValues: {
-      student: {
-        direccion: "",
-      },
-      father: {
-        direccion: "",
-      },
-      mother: {
-        direccion: "",
-      },
-      attendant: {
-        direccion: "",
-      },
+      student: { direccion: "" },
+      father: { direccion: "" },
+      mother: { direccion: "" },
+      attendant: { direccion: "" },
     },
   });
+
   const { handleSubmit, watch, setValue, reset } = methods;
 
+  // 🔥 Sincronizar direcciones correctamente
   useEffect(() => {
-    const studentDireccion = watch("student.direccion");
-    setValue("father.direccion", studentDireccion);
-    setValue("mother.direccion", studentDireccion);
-    setValue("attendant.direccion", studentDireccion);
-  }, [watch("student.direccion")]);
+    const subscription = watch((value, { name }) => {
+      if (name === "student.direccion") {
+        const dir = value.student.direccion;
+        setValue("father.direccion", dir);
+        setValue("mother.direccion", dir);
+        setValue("attendant.direccion", dir);
+      }
+    });
 
+    return () => subscription.unsubscribe();
+  }, [watch, setValue]);
+
+  // ---------------------------------------------------
+  //                 SUBMIT PRINCIPAL
+  // ---------------------------------------------------
   const onSubmit = async (data) => {
-    console.log("Datos del formulario:", data);
+    if (
+      !data.father.documento &&
+      !data.mother.documento &&
+      !data.attendant.documento
+    ) {
+      alert("Debe registrar al menos un acudiente (padre, madre o acudiente).");
+    } else {
+      console.log("Datos del formulario:", data);
 
-    if (data.father.documento) {
-      const father = {
-        document_father: data.father.documento.toUpperCase().trim(),
-        name_father: data.father.nombres.toUpperCase().trim(),
-        lastName_father: data.father.apellidos.toUpperCase().trim(),
-        date_father: data.father.nacimiento,
-        email_father: data.father.email.trim(),
-        phone_father: data.father.phone.trim(),
-        addres_father: data.father.direccion.toUpperCase().trim(),
+      // ---------------------- PADRE ----------------------
+      const insertFather = async () => {
+        if (data.father.documento) {
+          const { data: fatherExist } = await Supabase.from("fathers")
+            .select("*")
+            .eq("document_father", data.father.documento)
+            .maybeSingle();
+
+          // if (error) {
+          //   alert("Error consultando al padre");
+          //   return;
+          // }
+
+          if (fatherExist) {
+            console.log("El padre ya está registrado.");
+          } else {
+            const father = {
+              document_father: data.father.documento.toUpperCase().trim(),
+              name_father: data.father.nombres.toUpperCase().trim(),
+              lastName_father: data.father.apellidos.toUpperCase().trim(),
+              date_father: data.father.nacimiento,
+              email_father: data.father.email.trim(),
+              phone_father: data.father.phone.trim(),
+              addres_father: data.father.direccion.toUpperCase().trim(),
+            };
+
+            const { error: errorFather } = await Supabase.from(
+              "fathers"
+            ).insert([father]);
+
+            if (errorFather) {
+              alert("No se pudo registrar el padre.");
+              return;
+            } else {
+              console.log("Padre registrado correctamente.");
+            }
+          }
+        }
       };
-      const { errorFather } = await Supabase.from("fathers")
-        .insert([father])
-        .select();
-      if (errorFather) {
-        // console.log("Error inserting data:", errorFather);
-        alert("No se pudo registrar el asistente.", errorFather);
+
+      // ---------------------- MADRE ----------------------
+      const insertMother = async () => {
+        if (data.mother.documento) {
+          const { data: motherExist } = await Supabase.from("mothers")
+            .select("*")
+            .eq("document_mother", data.mother.documento)
+            .maybeSingle();
+
+          // if (error) {
+          //   alert("Error consultando a la madre");
+          //   return;
+          // }
+
+          if (motherExist) {
+            console.log("La madre ya está registrada.");
+          } else {
+            const mother = {
+              document_mother: data.mother.documento.toUpperCase().trim(),
+              name_mother: data.mother.nombres.toUpperCase().trim(),
+              lastName_mother: data.mother.apellidos.toUpperCase().trim(),
+              date_mother: data.mother.nacimiento,
+              email_mother: data.mother.email.trim(),
+              phone_mother: data.mother.phone.trim(),
+              addres_mother: data.mother.direccion.toUpperCase().trim(),
+            };
+
+            const { error: errorMother } = await Supabase.from(
+              "mothers"
+            ).insert([mother]);
+
+            if (errorMother) {
+              alert("No se pudo registrar la madre.");
+              return;
+            } else {
+              console.log("Madre registrado correctamente.");
+            }
+          }
+        }
+      };
+
+      // ---------------------- ACUDIENTE ----------------------
+      const insertAttendant = async () => {
+        if (data.attendant.select === "otro" && data.attendant.documento) {
+          const { data: attendantExist } = await Supabase.from("attendant")
+            .select("*")
+            .eq("document_attendant", data.attendant.documento)
+            .maybeSingle();
+
+          // if (error) {
+          //   alert("Error consultando al acudiente");
+          //   return;
+          // }
+
+          if (attendantExist) {
+            console.log("El acudiente ya está registrado.");
+          } else {
+            const attendant = {
+              document_attendant: data.attendant.documento.toUpperCase().trim(),
+              name_attendant: data.attendant.nombres.toUpperCase().trim(),
+              lastName_attendant: data.attendant.apellidos.toUpperCase().trim(),
+              relationship_attendant: data.attendant.parentesco
+                .toUpperCase()
+                .trim(),
+              email_attendant: data.attendant.email.trim(),
+              phone_attendant: data.attendant.phone.trim(),
+              addres_attendant: data.attendant.direccion.toUpperCase().trim(),
+            };
+
+            const { error: errorAttendant } = await Supabase.from(
+              "attendant"
+            ).insert([attendant]);
+
+            if (errorAttendant) {
+              alert("No se pudo registrar el acudiente.");
+              return;
+            } else {
+              console.log("Acudiente registrado correctamente.");
+            }
+          }
+        }
+      };
+
+      // ---------------------- ESTUDIANTE ----------------------
+      if (data.student.documento) {
+        const { data: studentExist } = await Supabase.from("students")
+          .select("*")
+          .eq("document_student", data.student.documento)
+          .maybeSingle();
+
+        // if (error) {
+        //   alert("Error consultando al estudiante");
+        //   return;
+        // }
+
+        if (studentExist) {
+          alert("El estudiante ya está registrado.");
+          return;
+        } else {
+          insertFather();
+          insertMother();
+          insertAttendant();
+          const student = {
+            document_student: data.student.documento.toUpperCase().trim(),
+            name_student: data.student.nombres.toUpperCase().trim(),
+            lastName_student: data.student.apellidos.toUpperCase().trim(),
+            date_student: data.student.nacimiento,
+            addres_student: data.student.direccion.toUpperCase().trim(),
+            grade_student: data.student.grado.trim(),
+            attendant: data.attendant.select.trim(),
+            id_father: data.father.documento || null,
+            id_mother: data.mother.documento || null,
+            id_attendant: data.attendant.documento || null,
+          };
+
+          const { error: errorStudent } = await Supabase.from(
+            "students"
+          ).insert([student]);
+
+          if (errorStudent) {
+            alert("No se pudo registrar el estudiante.");
+            return;
+          } else {
+            console.log("Estudiante registrado correctamente.");
+          }
+        }
+
+        alert("Datos agregados correctamente!");
+        reset();
+        window.location.reload();
       }
     }
-
-    if (data.mother.documento) {
-      const mother = {
-        document_mother: data.mother.documento.toUpperCase().trim(),
-        name_mother: data.mother.nombres.toUpperCase().trim(),
-        lastName_mother: data.mother.apellidos.toUpperCase().trim(),
-        date_mother: data.mother.nacimiento,
-        email_mother: data.mother.email.trim(),
-        phone_mother: data.mother.phone.trim(),
-        addres_mother: data.mother.direccion.toUpperCase().trim(),
-      };
-      const { errorMother } = await Supabase.from("mothers")
-        .insert([mother])
-        .select();
-      if (errorMother) {
-        // console.log("Error inserting data:", errorMother);
-        alert("No se pudo registrar el asistente.", errorMother);
-      }
-    }
-
-    if (data.attendant.select === "otro") {
-      const attendant = {
-        document_attendant: data.attendant.documento.toUpperCase().trim(),
-        name_attendant: data.attendant.nombres.toUpperCase().trim(),
-        lastName_attendant: data.attendant.apellidos.toUpperCase().trim(),
-        relationship_attendant: data.attendant.parentesco.toUpperCase().trim(),
-        email_attendant: data.attendant.email.trim(),
-        phone_attendant: data.attendant.phone.trim(),
-        addres_attendant: data.attendant.direccion.toUpperCase().trim(),
-      };
-      const { errorAttendant } = await Supabase.from("attendant")
-        .insert([attendant])
-        .select();
-      if (errorAttendant) {
-        // console.log("Error inserting data:", errorAttendant);
-        alert("No se pudo registrar el asistente.", errorAttendant);
-      }
-    }
-
-    const student = {
-      document_student: data.student.documento.toUpperCase().trim(),
-      name_student: data.student.nombres.toUpperCase().trim(),
-      lastName_student: data.student.apellidos.toUpperCase().trim(),
-      date_student: data.student.nacimiento,
-      addres_student: data.student.direccion.toUpperCase().trim(),
-      grade_student: data.student.grado.trim(),
-      attendant: data.attendant.select.trim(),
-      id_father: data.father.documento,
-      id_mother: data.mother.documento,
-      id_attendant: data.attendant.documento ? data.attendant.documento : null,
-    };
-
-    const { errorStudent } = await Supabase.from("students")
-      .insert([student])
-      .select();
-    if (errorStudent) {
-      // console.log("Error inserting data:", errorStudent);
-      alert("No se pudo registrar el asistente.", errorStudent);
-    }
-
-    alert("Datos agregados!");
-
-    reset();
   };
+
   return (
     <>
       <div className="flex justify-center items-center flex-col w-[360px] md:w-[760px] xl:w-[1040px]">

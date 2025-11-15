@@ -28,8 +28,9 @@ export const Mother = () => {
 
   // ⏳ Espera un poco antes de consultar (debounce)
   useEffect(() => {
+    if (!document || document.trim() === "") return;
     const delay = setTimeout(() => {
-      console.log("inicio busqueda estudiante");
+      console.log("inicio busqueda madre");
       readMotherData(document);
     }, 100);
     return () => clearTimeout(delay);
@@ -66,7 +67,6 @@ export const Mother = () => {
               type="text"
               id="documento"
               {...register("mother.documento", {
-                required: true,
                 onBlur: (e) => setDocument(e.target.value),
               })}
             />
@@ -97,9 +97,7 @@ export const Mother = () => {
               className="bg-white p-2 w-full rounded-md my-2"
               type="date"
               id="nacimiento"
-              {...register("mother.nacimiento", {
-                required: true,
-              })}
+              {...register("mother.nacimiento", {})}
             />
           </div>
           <div className="w-full">
@@ -109,7 +107,6 @@ export const Mother = () => {
               type="email"
               id="apellidos"
               {...register("mother.email", {
-                required: true,
                 pattern: {
                   value: /^[a-z0-9._%+ -]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
                   message: "Correo inválido",

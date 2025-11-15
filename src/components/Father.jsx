@@ -28,8 +28,9 @@ export const Father = () => {
 
   // ⏳ Espera un poco antes de consultar (debounce)
   useEffect(() => {
+    if (!document || document.trim() === "") return;
     const delay = setTimeout(() => {
-      console.log("inicio busqueda estudiante");
+      console.log("inicio busqueda padre");
       readFatherData(document);
     }, 100);
     return () => clearTimeout(delay);
@@ -65,7 +66,6 @@ export const Father = () => {
               type="text"
               id="documento"
               {...register("father.documento", {
-                required: true,
                 onBlur: (e) => setDocument(e.target.value),
               })}
             />
@@ -106,7 +106,6 @@ export const Father = () => {
               type="email"
               id="apellidos"
               {...register("father.email", {
-                required: true,
                 pattern: {
                   value: /^[a-z0-9._%+ -]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
                   message: "Correo inválido",
