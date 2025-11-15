@@ -81,9 +81,8 @@ function App() {
             if (errorFather) {
               alert("No se pudo registrar el padre.");
               return;
-            } else {
-              console.log("Padre registrado correctamente.");
             }
+            console.log("Padre registrado correctamente.");
           }
         }
       };
@@ -121,9 +120,8 @@ function App() {
             if (errorMother) {
               alert("No se pudo registrar la madre.");
               return;
-            } else {
-              console.log("Madre registrado correctamente.");
             }
+            console.log("Madre registrado correctamente.");
           }
         }
       };
@@ -163,9 +161,8 @@ function App() {
             if (errorAttendant) {
               alert("No se pudo registrar el acudiente.");
               return;
-            } else {
-              console.log("Acudiente registrado correctamente.");
             }
+            console.log("Acudiente registrado correctamente.");
           }
         }
       };
