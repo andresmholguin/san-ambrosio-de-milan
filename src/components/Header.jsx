@@ -1,13 +1,13 @@
 export const Header = ({ theme, setTheme }) => {
   return (
-    <header className="w-full bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 py-3.5 px-6 md:px-12 flex justify-between items-center transition-colors duration-300">
+    <header className="w-full bg-white rounded-b-lg dark:bg-slate-800 border-b border-gray-100 dark:border-slate-800 py-3.5 px-6 md:px-12 flex justify-between items-center transition-colors duration-300">
       {/* Izquierda: Logotipo y Nombre */}
       <div className="flex items-center gap-2">
-        <div className="text-Sam dark:text-green-400">
+        <div className="text-Sam dark:text-green-400 dark:rounded-full dark:bg-white p-2">
           <img className="size-12" src="/SAM.svg" alt="Logo" />
         </div>
-        <span className="font-bold text-[#0e704d] text-center dark:text-green-400 text-lg tracking-tight select-none">
-          Colegio San Ambrosio <br /> de Milan
+        <span className="font-bold text-[#0e704d] text-center dark:text-white text-lg tracking-tight select-none">
+          Colegio San Ambrosio <br /> de Milán
         </span>
       </div>
 
