@@ -397,7 +397,7 @@ function App() {
                 }`}>
                 {step > 1 ? "✓" : "1"}
               </div>
-              <span className={`text-xs font-bold transition-colors duration-300 ${step >= 1 ? "text-Sam dark:text-green-400" : "text-gray-400 dark:text-slate-500"
+              <span className={`text-xs font-bold transition-colors duration-300 ${step >= 1 ? "text-Sam dark:text-green-400" : "text-gray-500 dark:text-slate-400"
                 }`}>
                 Estudiante
               </span>
@@ -409,11 +409,11 @@ function App() {
                   ? "bg-white dark:bg-slate-800 border-Sam text-Sam dark:text-green-400 ring-4 ring-Sam/20"
                   : step > 2
                     ? "bg-Sam border-Sam text-white"
-                    : "bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-400 dark:text-slate-500"
+                    : "bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-500 dark:text-slate-400"
                 }`}>
                 {step > 2 ? "✓" : "2"}
               </div>
-              <span className={`text-xs font-bold transition-colors duration-300 ${step >= 2 ? "text-slate-800 dark:text-slate-200" : "text-gray-400 dark:text-slate-500"
+              <span className={`text-xs font-bold transition-colors duration-300 ${step >= 2 ? "text-slate-800 dark:text-slate-200" : "text-gray-500 dark:text-slate-400"
                 }`}>
                 Padres
               </span>
@@ -423,11 +423,11 @@ function App() {
             <div className="flex flex-col items-center gap-2">
               <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border-2 ${step === 3
                   ? "bg-Sam border-Sam text-white ring-4 ring-Sam/20"
-                  : "bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-400 dark:text-slate-500"
+                  : "bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-500 dark:text-slate-400"
                 }`}>
                 3
               </div>
-              <span className={`text-xs font-bold transition-colors duration-300 ${step === 3 ? "text-Sam dark:text-green-400" : "text-gray-400 dark:text-slate-500"
+              <span className={`text-xs font-bold transition-colors duration-300 ${step === 3 ? "text-Sam dark:text-green-400" : "text-gray-500 dark:text-slate-400"
                 }`}>
                 Acudiente
               </span>
