@@ -4,7 +4,7 @@ export const Footer = () => {
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Columna 1: Info Colegio */}
         <div className="flex flex-col gap-3">
-          <h3 className="text-xl font-bold text-white">Colegio San Ambrosio</h3>
+          <h3 className="text-xl font-bold text-white">Colegio San Ambrosio de Milan</h3>
           <p className="text-sm text-slate-400 max-w-xs leading-relaxed">
             Formando líderes para el futuro con excelencia académica y valores institucionales.
           </p>
@@ -14,12 +14,12 @@ export const Footer = () => {
         <div className="flex flex-col gap-3">
           <h4 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">Navegación</h4>
           <ul className="grid grid-cols-2 gap-2 text-sm">
-            <li><a href="#" className="hover:text-white transition-colors">Inicio</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Nosotros</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Inscripciones</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Noticias</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Contacto</a></li>
-            <li><a href="#" className="hover:text-white transition-colors">Aviso de Privacidad</a></li>
+            <li><a href="/" className="hover:text-white transition-colors">Inicio</a></li>
+            <li><a href="https://colegiosanambrosiodemilan.edu.co/nosotros/" className="hover:text-white transition-colors">Nosotros</a></li>
+            <li><a href="https://colegiosanambrosiodemilan.edu.co/inscripciones/" className="hover:text-white transition-colors">Inscripciones</a></li>
+            <li><a href="https://colegiosanambrosiodemilan.edu.co/noticias/" className="hover:text-white transition-colors">Noticias</a></li>
+            <li><a href="https://colegiosanambrosiodemilan.edu.co/contacto/" className="hover:text-white transition-colors">Contacto</a></li>
+            {/* <li><a href="#" className="hover:text-white transition-colors">Aviso de Privacidad</a></li> */}
           </ul>
         </div>
 

@@ -4,13 +4,10 @@ export const Header = ({ theme, setTheme }) => {
       {/* Izquierda: Logotipo y Nombre */}
       <div className="flex items-center gap-2">
         <div className="text-Sam dark:text-green-400">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6M4.5 12.062v3.344a1.2 1.2 0 00.672 1.077L12 20"></path>
-            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
-          </svg>
+          <img className="size-12" src="/SAM.svg" alt="Logo" />
         </div>
-        <span className="font-bold text-[#0e704d] dark:text-green-400 text-lg tracking-tight select-none">
-          Colegio San Ambrosio
+        <span className="font-bold text-[#0e704d] text-center dark:text-green-400 text-lg tracking-tight select-none">
+          Colegio San Ambrosio <br /> de Milan
         </span>
       </div>
 
@@ -40,12 +37,13 @@ export const Header = ({ theme, setTheme }) => {
         </button>
 
         {/* Botón Inscríbete */}
-        <button
-          type="button"
+        <a
+          href="https://colegiosanambrosiodemilan.edu.co/inscripciones/"
+          target="_blank"
           className="bg-Sam hover:bg-green-700 text-white text-xs md:text-sm font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer"
         >
           Inscríbete
-        </button>
+        </a>
       </div>
     </header>
   );
