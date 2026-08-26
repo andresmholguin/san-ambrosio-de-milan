@@ -283,119 +283,13 @@ function App() {
         throw new Error(`Google Sheets API: ${sheetError.message}`);
       }
 
-      // 2. Guardar en Supabase (Almacenamiento Secundario / Opcional)
-      let supabaseSuccess = true;
-      let supabaseErrorMsg = "";
-
-      if (isSupabaseConfigured) {
-        toast.loading("Sincronizando con Supabase...", { id: toastId });
-        try {
-          // PADRE
-          if (data.father.documento) {
-            const father = {
-              document_father: data.father.documento.toUpperCase().trim(),
-              name_father: (data.father.nombres || "").toUpperCase().trim(),
-              lastName_father: (data.father.apellidos || "").toUpperCase().trim(),
-              date_father: data.father.nacimiento || null,
-              email_father: (data.father.email || "").trim(),
-              phone_father: (data.father.phone || "").trim(),
-              addres_father: fatherAddr,
-            };
-
-            const { error: errorFather } = await Supabase.from("fathers").upsert(
-              father,
-              { onConflict: "document_father" }
-            );
-
-            if (errorFather) throw new Error(`Padre: ${errorFather.message}`);
-          }
-
-          // MADRE
-          if (data.mother.documento) {
-            const mother = {
-              document_mother: data.mother.documento.toUpperCase().trim(),
-              name_mother: (data.mother.nombres || "").toUpperCase().trim(),
-              lastName_mother: (data.mother.apellidos || "").toUpperCase().trim(),
-              date_mother: data.mother.nacimiento || null,
-              email_mother: (data.mother.email || "").trim(),
-              phone_mother: (data.mother.phone || "").trim(),
-              addres_mother: motherAddr,
-            };
-
-            const { error: errorMother } = await Supabase.from("mothers").upsert(
-              mother,
-              { onConflict: "document_mother" }
-            );
-
-            if (errorMother) throw new Error(`Madre: ${errorMother.message}`);
-          }
-
-          // ACUDIENTE (OTRO)
-          if (data.attendant.select === "otro" && data.attendant.documento) {
-            const attendant = {
-              document_attendant: data.attendant.documento.toUpperCase().trim(),
-              name_attendant: (data.attendant.nombres || "").toUpperCase().trim(),
-              lastName_attendant: (data.attendant.apellidos || "").toUpperCase().trim(),
-              relationship_attendant: (data.attendant.parentesco || "").toUpperCase().trim(),
-              email_attendant: (data.attendant.email || "").trim(),
-              phone_attendant: (data.attendant.phone || "").trim(),
-              addres_attendant: attendantAddr,
-            };
-
-            const { error: errorAttendant } = await Supabase.from("attendant").upsert(
-              attendant,
-              { onConflict: "document_attendant" }
-            );
-
-            if (errorAttendant) throw new Error(`Acudiente: ${errorAttendant.message}`);
-          }
-
-          // ESTUDIANTE
-          if (data.student.documento) {
-            const student = {
-              document_student: data.student.documento.toUpperCase().trim(),
-              name_student: (data.student.nombres || "").toUpperCase().trim(),
-              lastName_student: (data.student.apellidos || "").toUpperCase().trim(),
-              date_student: data.student.nacimiento || null,
-              addres_student: studentAddr,
-              grade_student: (data.student.grado || "").trim(),
-              attendant: (data.attendant.select || "").trim(),
-              id_father: data.father.documento || null,
-              id_mother: data.mother.documento || null,
-              id_attendant:
-                data.attendant.select === "otro" ? (data.attendant.documento || null) : null,
-            };
-
-            const { error: errorStudent } = await Supabase.from("students").upsert(
-              student,
-              { onConflict: "document_student" }
-            );
-
-            if (errorStudent) throw new Error(`Estudiante: ${errorStudent.message}`);
-          }
-        } catch (supabaseError) {
-          console.error("Error al guardar en Supabase:", supabaseError);
-          supabaseSuccess = false;
-          supabaseErrorMsg = supabaseError.message;
-        }
-      }
-
-      // 3. Notificación final al usuario
-      if (isSupabaseConfigured && !supabaseSuccess) {
-        toast.dismiss(toastId);
-        openModal(
-          "Registro Parcial",
-          `Los datos se guardaron con éxito en Google Sheets, pero la sincronización secundaria con Supabase falló: ${supabaseErrorMsg}`,
-          "error"
-        );
-      } else {
-        toast.dismiss(toastId);
-        openModal(
-          "¡Registro Exitoso!",
-          "La actualización de datos del estudiante se ha guardado correctamente en la hoja de cálculo de Google Sheets.",
-          "success"
-        );
-      }
+      // 2. Notificación final al usuario
+      toast.dismiss(toastId);
+      openModal(
+        "¡Registro Exitoso!",
+        "La actualización de datos del estudiante se ha guardado correctamente en la hoja de cálculo de Google Sheets.",
+        "success"
+      );
 
     } catch (error) {
       console.error("Error en proceso de guardado:", error);
