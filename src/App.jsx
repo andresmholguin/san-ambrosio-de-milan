@@ -328,9 +328,9 @@ function App() {
               </div>
             )}
 
-            <h3 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white mb-2">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white mb-2">
               {modal.title}
-            </h3>
+            </h2>
             <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-6 leading-relaxed">
               {modal.message}
             </p>
@@ -352,7 +352,7 @@ function App() {
       <Header theme={theme} setTheme={setTheme} />
 
       {/* Contenido principal centrado */}
-      <div className="flex justify-center items-center flex-col w-full max-w-5xl px-4 mx-auto pb-12 transition-colors duration-300">
+      <main className="flex justify-center items-center flex-col w-full max-w-5xl px-4 mx-auto pb-12 transition-colors duration-300">
 
         {/* Título de la página y subtítulo dinámico */}
         <h1 className="text-[1.8rem] md:text-[2.5rem] mt-10 font-bold text-slate-800 dark:text-slate-100 transition-colors duration-300 text-center">
@@ -522,7 +522,7 @@ function App() {
             </fieldset>
           </form>
         </FormProvider>
-      </div>
+      </main>
 
       <Footer />
 

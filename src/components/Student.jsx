@@ -74,7 +74,7 @@ export const Student = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
           </svg>
         </div>
-        <h3 className="text-xl font-bold text-slate-800 dark:text-white">Datos del Estudiante</h3>
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Datos del Estudiante</h2>
       </div>
       
       <hr className="my-6 border-gray-100 dark:border-slate-700" />
