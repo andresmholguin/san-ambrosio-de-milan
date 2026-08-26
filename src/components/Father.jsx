@@ -216,10 +216,10 @@ export const Father = () => {
               Dirección de Residencia
             </label>
             <input
-              className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none uppercase transition-all font-medium disabled:opacity-65 disabled:cursor-not-allowed"
+              className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none uppercase transition-all font-medium read-only:opacity-65 read-only:cursor-not-allowed read-only:bg-gray-50 dark:read-only:bg-slate-800"
               type="text"
               id="father-direccion"
-              disabled={watch("father.viveConHijo")}
+              readOnly={watch("father.viveConHijo")}
               {...register("father.direccion", {
                 required: (docValue && !watch("father.viveConHijo")) ? "Campo obligatorio" : false,
               })}
@@ -233,10 +233,10 @@ export const Father = () => {
               Barrio
             </label>
             <input
-              className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none uppercase transition-all font-medium disabled:opacity-65 disabled:cursor-not-allowed"
+              className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none uppercase transition-all font-medium read-only:opacity-65 read-only:cursor-not-allowed read-only:bg-gray-50 dark:read-only:bg-slate-800"
               type="text"
               id="father-barrio"
-              disabled={watch("father.viveConHijo")}
+              readOnly={watch("father.viveConHijo")}
               {...register("father.barrio", {
                 required: (docValue && !watch("father.viveConHijo")) ? "Campo obligatorio" : false,
               })}

@@ -204,10 +204,25 @@ function App() {
 
     try {
       // 1. Reestructurar datos para el API de Google Sheets (formato SheetDB)
-      const studentAddr = ((data.student.direccion || "").trim() + (data.student.barrio ? " - " + data.student.barrio.trim() : "")).toUpperCase();
-      const fatherAddr = ((data.father.direccion || "").trim() + (data.father.barrio ? " - " + data.father.barrio.trim() : "")).toUpperCase();
-      const motherAddr = ((data.mother.direccion || "").trim() + (data.mother.barrio ? " - " + data.mother.barrio.trim() : "")).toUpperCase();
-      const attendantAddr = ((data.attendant.direccion || "").trim() + (data.attendant.barrio ? " - " + data.attendant.barrio.trim() : "")).toUpperCase();
+      // NOTA: los inputs "disabled" no se incluyen en el objeto `data` de RHF,
+      // por eso usamos getValues() para recuperar la dirección cuando viveConHijo está activo.
+      const studentDir = data.student.direccion || getValues("student.direccion") || "";
+      const studentBar = data.student.barrio    || getValues("student.barrio")    || "";
+      const studentAddr = (studentDir.trim() + (studentBar ? " - " + studentBar.trim() : "")).toUpperCase();
+
+      const fatherVive  = getValues("father.viveConHijo");
+      const fatherDir   = fatherVive ? studentDir : (data.father.direccion  || getValues("father.direccion")  || "");
+      const fatherBar   = fatherVive ? studentBar : (data.father.barrio     || getValues("father.barrio")     || "");
+      const fatherAddr  = (fatherDir.trim() + (fatherBar ? " - " + fatherBar.trim() : "")).toUpperCase();
+
+      const motherVive  = getValues("mother.viveConHijo");
+      const motherDir   = motherVive ? studentDir : (data.mother.direccion  || getValues("mother.direccion")  || "");
+      const motherBar   = motherVive ? studentBar : (data.mother.barrio     || getValues("mother.barrio")     || "");
+      const motherAddr  = (motherDir.trim() + (motherBar ? " - " + motherBar.trim() : "")).toUpperCase();
+
+      const attendantDir  = data.attendant.direccion || getValues("attendant.direccion") || studentDir;
+      const attendantBar  = data.attendant.barrio    || getValues("attendant.barrio")    || studentBar;
+      const attendantAddr = (attendantDir.trim() + (attendantBar ? " - " + attendantBar.trim() : "")).toUpperCase();
 
       const sheetdbPayload = {
         data: [
