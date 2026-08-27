@@ -13,12 +13,14 @@ export default function Login() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleDocumentSubmit = async (e) => {
     e.preventDefault();
     if (!documento.trim()) return;
 
     setIsLoading(true);
+    setErrorMsg("");
     try {
       // Buscar el usuario por documento en la tabla "users" en Google Sheets (vía SheetDB)
       const sheetUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
@@ -26,12 +28,12 @@ export default function Login() {
 
       // SheetDB Search API: /search?id_documento=123&sheet=users
       const res = await fetch(`${sheetUrl}/search?id_documento=${documento}&sheet=users`);
-      if (!res.ok) throw new Error("Error al consultar el usuario.");
+      if (!res.ok) throw new Error("Error al consultar el usuario. Por favor intente más tarde.");
       
       const data = await res.json();
 
       if (!data || data.length === 0) {
-        toast.error("El documento no se encuentra registrado como Staff.");
+        setErrorMsg("El documento ingresado no se encuentra registrado como administrador o profesor en nuestra base de datos.");
         setIsLoading(false);
         return;
       }
@@ -48,7 +50,7 @@ export default function Login() {
         setStep(2);
       }
     } catch (err) {
-      toast.error(err.message);
+      setErrorMsg(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -59,16 +61,17 @@ export default function Login() {
     if (!password) return;
 
     setIsLoading(true);
+    setErrorMsg("");
     try {
       const hashed = await hashPassword(password);
       if (hashed === userData.password_hash) {
         toast.success("¡Bienvenido!");
         login(userData);
       } else {
-        toast.error("Contraseña incorrecta.");
+        setErrorMsg("La contraseña ingresada es incorrecta. Por favor, inténtalo de nuevo.");
       }
     } catch (err) {
-      toast.error("Error al iniciar sesión.");
+      setErrorMsg("Error inesperado al iniciar sesión.");
     } finally {
       setIsLoading(false);
     }
@@ -82,12 +85,14 @@ export default function Login() {
 
   const handleCreatePassword = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
+
     if (password !== confirmPassword) {
-      toast.error("Las contraseñas no coinciden.");
+      setErrorMsg("Las contraseñas no coinciden. Asegúrate de escribirlas exactamente igual.");
       return;
     }
     if (!validatePasswordComplexity(password)) {
-      toast.error("La contraseña debe tener al menos 6 caracteres, incluir 1 letra y 1 número.");
+      setErrorMsg("La contraseña es muy débil. Debe tener al menos 6 caracteres, incluyendo mínimo 1 letra y 1 número.");
       return;
     }
 
@@ -134,6 +139,15 @@ export default function Login() {
           </p>
         </div>
 
+        {errorMsg && (
+          <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm mb-4 border border-red-200 dark:border-red-800 flex items-start gap-2 animate-fade-in shadow-sm">
+            <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <span className="leading-snug">{errorMsg}</span>
+          </div>
+        )}
+
         {step === 1 && (
           <form onSubmit={handleDocumentSubmit} className="flex flex-col gap-4">
             <div>
@@ -143,7 +157,10 @@ export default function Login() {
               <input
                 type="text"
                 value={documento}
-                onChange={(e) => setDocumento(e.target.value)}
+                onChange={(e) => {
+                  setDocumento(e.target.value);
+                  setErrorMsg("");
+                }}
                 className="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-3 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam outline-none"
                 placeholder="Ej. 1020304050"
                 required
@@ -171,7 +188,10 @@ export default function Login() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrorMsg("");
+                }}
                 className="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-3 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam outline-none"
                 placeholder="********"
                 required
@@ -180,7 +200,7 @@ export default function Login() {
             <div className="flex gap-2 mt-4">
               <button
                 type="button"
-                onClick={() => { setStep(1); setPassword(""); }}
+                onClick={() => { setStep(1); setPassword(""); setErrorMsg(""); }}
                 className="bg-gray-200 hover:bg-gray-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold py-3 px-4 rounded-lg transition-colors w-1/3"
               >
                 Volver
@@ -210,7 +230,10 @@ export default function Login() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrorMsg("");
+                }}
                 className="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-3 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam outline-none"
                 placeholder="Mínimo 6 caracteres (letras y números)"
                 required
@@ -224,7 +247,10 @@ export default function Login() {
               <input
                 type="password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setErrorMsg("");
+                }}
                 className="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-3 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam outline-none"
                 placeholder="Repite la contraseña"
                 required
@@ -234,7 +260,7 @@ export default function Login() {
             <div className="flex gap-2 mt-4">
               <button
                 type="button"
-                onClick={() => { setStep(1); setPassword(""); setConfirmPassword(""); }}
+                onClick={() => { setStep(1); setPassword(""); setErrorMsg(""); }}
                 className="bg-gray-200 hover:bg-gray-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold py-3 px-4 rounded-lg transition-colors w-1/3"
               >
                 Volver
