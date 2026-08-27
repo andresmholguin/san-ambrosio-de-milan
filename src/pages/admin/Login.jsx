@@ -164,6 +164,7 @@ export default function Login() {
                 className="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-3 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam outline-none"
                 placeholder="Ej. 1020304050"
                 required
+                autoFocus
               />
             </div>
             <button
@@ -195,6 +196,7 @@ export default function Login() {
                 className="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-3 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam outline-none"
                 placeholder="********"
                 required
+                autoFocus
               />
             </div>
             <div className="flex gap-2 mt-4">
@@ -237,6 +239,7 @@ export default function Login() {
                 className="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-3 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam outline-none"
                 placeholder="Mínimo 6 caracteres (letras y números)"
                 required
+                autoFocus
               />
             </div>
 
