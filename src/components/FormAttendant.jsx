@@ -165,10 +165,7 @@ export const FormAttendant = ({ attendantSelect }) => {
             type="email"
             id="attendant-email"
             {...register("attendant.email", {
-              pattern: {
-                value: /^[a-z0-9._%+ -]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
-                message: "Correo inválido",
-              },
+              required: docValue ? "Campo obligatorio" : false,
             })}
           />
           {errors.attendant?.email && (
@@ -177,19 +174,76 @@ export const FormAttendant = ({ attendantSelect }) => {
         </div>
       </div>
 
-      {/* Relación específica si es "Otro" */}
+      {/* Direccion y Barrio (Visible solo para 'otro') */}
       {attendantSelect === "otro" && (
-        <div>
+        <>
+          {/* Checkbox Vive con el estudiante */}
+          <div className="flex flex-col gap-2 p-4 bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700 mt-2">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                defaultChecked={false}
+                className="w-5 h-5 text-Sam rounded border-gray-300 dark:border-slate-600 focus:ring-Sam dark:focus:ring-green-400 bg-white dark:bg-slate-800 transition-all cursor-pointer"
+                {...register("attendant.viveConHijo")}
+              />
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                El acudiente vive en la misma dirección del estudiante
+              </span>
+            </label>
+          </div>
+
+          {!watch("attendant.viveConHijo") && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 animate-fade-in">
+              <div>
+                <label htmlFor="attendant-direccion" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 block">
+                  Dirección
+                </label>
+                <input
+                  className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none uppercase transition-all font-medium"
+                  type="text"
+                  id="attendant-direccion"
+                  {...register("attendant.direccion", {
+                    required: !watch("attendant.viveConHijo") ? "Campo obligatorio" : false,
+                  })}
+                />
+                {errors.attendant?.direccion && (
+                  <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.attendant.direccion.message}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="attendant-barrio" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 block">
+                  Barrio
+                </label>
+                <input
+                  className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none uppercase transition-all font-medium"
+                  type="text"
+                  id="attendant-barrio"
+                  {...register("attendant.barrio", {
+                    required: !watch("attendant.viveConHijo") ? "Campo obligatorio" : false,
+                  })}
+                />
+                {errors.attendant?.barrio && (
+                  <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.attendant.barrio.message}</p>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Relación con el estudiante (Solo cuando es "Otro") */}
+      {attendantSelect === "otro" && (
+        <div className="mt-2">
           <label htmlFor="attendant-parentesco" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 block">
-            Especifique el Parentesco
+            Especifique el Parentesco <span className="text-xs lowercase text-slate-400">(Ej: Abuelo, Tío, Hermano)</span>
           </label>
           <input
             className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none uppercase transition-all font-medium"
             type="text"
             id="attendant-parentesco"
-            placeholder="Ej. Tío(a), Hermano(a)"
+            placeholder="Ejemplo: TÍO"
             {...register("attendant.parentesco", {
-              required: attendantSelect === "otro" ? "Campo obligatorio" : false,
+              required: docValue ? "Campo obligatorio" : false,
             })}
           />
           {errors.attendant?.parentesco && (

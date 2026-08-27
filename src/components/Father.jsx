@@ -84,19 +84,38 @@ export const Father = () => {
       <hr className="my-4 border-gray-100 dark:border-slate-700" />
       
       <div className="flex flex-col gap-4">
-        {/* Documento de Identidad (Primero para búsqueda) */}
-        <div>
-          <label htmlFor="father-documento" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 block">
-            Documento de Identidad (Opcional)
-          </label>
-          <input
-            className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none transition-all font-medium"
-            type="text"
-            id="father-documento"
-            {...register("father.documento", {
-              onBlur: (e) => readFatherData(e.target.value),
-            })}
-          />
+        {/* Tipo de Documento y Número de Documento */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="father-tipo-documento" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 block">
+              Tipo de Documento
+            </label>
+            <select
+              className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none transition-all font-medium"
+              id="father-tipo-documento"
+              {...register("father.tipoDocumento")}
+            >
+              <option value="Cédula de Ciudadanía">Cédula de Ciudadanía</option>
+              <option value="Cédula de Extranjería">Cédula de Extranjería</option>
+              <option value="Pasaporte">Pasaporte</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="father-documento" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 block">
+              Número de Documento
+            </label>
+            <input
+              className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none transition-all font-medium"
+              type="text"
+              id="father-documento"
+              {...register("father.documento", {
+                onBlur: (e) => readFatherData(e.target.value),
+              })}
+            />
+            {errors.father?.documento && (
+              <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.father.documento.message}</p>
+            )}
+          </div>
         </div>
 
         {/* Nombres Completos y Apellidos Completos */}

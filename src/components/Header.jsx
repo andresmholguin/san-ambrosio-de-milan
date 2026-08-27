@@ -1,22 +1,29 @@
+import { Link, useLocation } from "react-router-dom";
+import { useAuthStore } from "../store/useAuthStore";
+
 export const Header = ({ theme, setTheme }) => {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+  const { isAuthenticated, logout } = useAuthStore();
+
   return (
     <header className="w-full bg-white rounded-b-lg dark:bg-slate-800 border-b border-gray-100 dark:border-slate-800 py-3.5 px-6 md:px-12 flex justify-between items-center transition-colors duration-300">
       {/* Izquierda: Logotipo y Nombre */}
-      <div className="flex items-center gap-2">
+      <Link to={isAdmin ? "/admin" : "/"} className="flex items-center gap-2">
         <div className="text-Sam dark:text-green-400 dark:rounded-full dark:bg-white p-2">
           <img className="size-12" src="/SAM.svg" alt="Logo" />
         </div>
         <span className="font-bold text-[#0e704d] text-center dark:text-white text-lg tracking-tight select-none">
           Colegio San Ambrosio <br /> de Milán
         </span>
-      </div>
+      </Link>
 
       {/* Centro: Título general (Oculto en móvil) */}
       <div className="text-sm text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider hidden md:block select-none">
-        Actualización de Datos
+        {isAdmin ? "Panel Administrativo" : "Actualización de Datos"}
       </div>
 
-      {/* Derecha: Conmutador de tema y Botón Inscripción */}
+      {/* Derecha: Conmutador de tema y Botones */}
       <div className="flex items-center gap-3">
         {/* Toggle Dark Mode */}
         <button
@@ -36,14 +43,35 @@ export const Header = ({ theme, setTheme }) => {
           )}
         </button>
 
-        {/* Botón Inscríbete */}
-        <a
-          href="https://colegiosanambrosiodemilan.edu.co/inscripciones/"
-          target="_blank"
-          className="bg-Sam hover:bg-green-700 text-white text-xs md:text-sm font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer"
-        >
-          Inscríbete
-        </a>
+        {isAdmin ? (
+          isAuthenticated && (
+            <button
+              onClick={logout}
+              className="bg-red-500 hover:bg-red-600 text-white text-xs md:text-sm font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer"
+            >
+              Cerrar Sesión
+            </button>
+          )
+        ) : (
+          <>
+            {/* Botón Acceso Staff */}
+            <Link
+              to="/admin"
+              className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 text-xs md:text-sm font-bold px-3 py-2 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-colors hidden sm:block"
+            >
+              Staff
+            </Link>
+            
+            {/* Botón Inscríbete */}
+            <a
+              href="https://colegiosanambrosiodemilan.edu.co/inscripciones/"
+              target="_blank"
+              className="bg-Sam hover:bg-green-700 text-white text-xs md:text-sm font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer"
+            >
+              Inscríbete
+            </a>
+          </>
+        )}
       </div>
     </header>
   );
