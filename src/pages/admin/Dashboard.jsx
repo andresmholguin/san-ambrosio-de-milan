@@ -3,9 +3,10 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { StudentsList } from "./components/StudentsList";
 import { ProfessorsList } from "./components/ProfessorsList";
 import { AttendanceForm } from "./components/AttendanceForm";
+import { ClassroomsManager } from "./components/ClassroomsManager";
 
 export default function Dashboard() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState("estudiantes");
 
   return (
@@ -38,22 +39,35 @@ export default function Dashboard() {
           Control de Asistencia
         </button>
         {user?.rol === "admin" && (
-          <button
-            onClick={() => setActiveTab("profesores")}
-            className={`px-4 py-2 font-bold border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === "profesores" 
-                ? "border-Sam text-Sam" 
-                : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-            }`}
-          >
-            Gestión Profesores
-          </button>
+          <>
+            <button
+              onClick={() => setActiveTab("salones")}
+              className={`px-4 py-2 font-bold border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === "salones" 
+                  ? "border-Sam text-Sam" 
+                  : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              Salones y Distribución
+            </button>
+            <button
+              onClick={() => setActiveTab("profesores")}
+              className={`px-4 py-2 font-bold border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === "profesores" 
+                  ? "border-Sam text-Sam" 
+                  : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              Gestión Profesores
+            </button>
+          </>
         )}
       </div>
 
       <div>
         {activeTab === "estudiantes" && <StudentsList />}
         {activeTab === "asistencia" && <AttendanceForm />}
+        {activeTab === "salones" && user?.rol === "admin" && <ClassroomsManager />}
         {activeTab === "profesores" && user?.rol === "admin" && <ProfessorsList />}
       </div>
     </div>

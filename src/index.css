@@ -2,28 +2,31 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@font-face {
-  font-family: Raleway;
-  font-style: normal;
-  font-weight: 200 700;
-  font-display: swap;
-  src: url("/fonts/Raleway-VariableFont_wght.ttf") format("truetype");
-}
-
 @theme {
   --color-Sam: #0e704d;
   --color-Sams: #99d051;
 
-  --font-raleway: "Raleway", sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-title: "Outfit", system-ui, -apple-system, sans-serif;
 }
 
-/* Transiciones de color para dark/light mode */
+/* Transiciones y tipografía global */
 html, body {
-  background-color: #f8f9fa; /* fondo gris claro suave */
+  background-color: #edf2f7; /* Fondo gris suave y descansado para la vista en modo light */
   color: #1e293b; /* slate-800 */
   transition-property: color, background-color, border-color;
   transition-duration: 300ms;
-  font-family: "Raleway", sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Jerarquía de Títulos: Outfit */
+h1, h2, h3, h4, h5, h6, .font-heading, .font-title {
+  font-family: "Outfit", system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.025em;
 }
 
 html.dark, html.dark body {

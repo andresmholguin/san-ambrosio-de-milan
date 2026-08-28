@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
+import { NotificationBell } from "./NotificationBell";
 
 export const Header = ({ theme, setTheme }) => {
   const location = useLocation();
@@ -42,6 +43,9 @@ export const Header = ({ theme, setTheme }) => {
             </svg>
           )}
         </button>
+
+        {/* Campana de Notificaciones (solo en /admin cuando está autenticado) */}
+        {isAdmin && isAuthenticated && <NotificationBell />}
 
         {isAdmin ? (
           isAuthenticated && (

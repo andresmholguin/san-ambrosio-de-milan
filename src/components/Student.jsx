@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
-import Supabase from "../Supabase";
+import { getStudentByDoc } from "../services/studentService";
 
 export const Student = () => {
   const [studentData, setStudentData] = useState(null);
@@ -21,36 +21,34 @@ export const Student = () => {
     }
   }, [docValue]);
 
-  // 🔍 Buscar estudiante por documento
+  // 🔍 Buscar estudiante por documento en Firestore
   const readStudentData = async (doc) => {
     if (!doc || doc.trim().length < 5) {
       setStudentData(null);
       return; // evita búsquedas con menos de 5 caracteres
     }
 
-    const { data: student, error } = await Supabase.from("students")
-      .select("*")
-      .eq("document_student", doc)
-      .maybeSingle(); // devuelve un único registro o null
-
-    if (error) {
+    try {
+      const student = await getStudentByDoc(doc.trim());
+      setStudentData(student || null);
+    } catch (error) {
       console.error("Error al leer estudiante:", error);
       setStudentData(null);
-      return;
     }
-
-    setStudentData(student || null);
   };
 
   // 🧩 Actualiza los campos del formulario cuando cambie studentData
   useEffect(() => {
     if (studentData) {
-      setValue("student.nombres", studentData.name_student || "");
-      setValue("student.apellidos", studentData.lastName_student || "");
-      setValue("student.grado", studentData.grade_student || "");
-      setValue("student.nacimiento", studentData.date_student || "");
-      
-      const rawAddress = studentData.addres_student || "";
+      setValue("student.nombres", studentData.student_name || studentData.name_student || "");
+      setValue("student.apellidos", studentData.student_lastname || studentData.lastName_student || "");
+      setValue("student.grado", studentData.grado_aspirado || studentData.student_grade || "");
+      setValue("student.nacimiento", studentData.student_birth || studentData.date_student || "");
+      if (studentData.student_doc_type) {
+        setValue("student.tipoDocumento", studentData.student_doc_type);
+      }
+
+      const rawAddress = studentData.student_address || studentData.addres_student || "";
       const parts = rawAddress.split(/\s*-\s*/);
       setValue("student.direccion", parts[0] || "");
       setValue("student.barrio", parts[1] || "");
@@ -76,9 +74,9 @@ export const Student = () => {
         </div>
         <h2 className="text-xl font-bold text-slate-800 dark:text-white">Datos del Estudiante</h2>
       </div>
-      
+
       <hr className="my-6 border-gray-100 dark:border-slate-700" />
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
         {/* Nombres Completos */}
         <div>
@@ -160,6 +158,7 @@ export const Student = () => {
             className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none transition-all font-medium"
             type="date"
             id="student-nacimiento"
+            max={new Date().toISOString().split("T")[0]}
             {...register("student.nacimiento", { required: "Campo obligatorio" })}
           />
           {errors.student?.nacimiento && (
@@ -170,7 +169,7 @@ export const Student = () => {
         {/* Grado a Cursar */}
         <div>
           <label htmlFor="student-grado" className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 block">
-            Grado a Cursar
+            Grado a Cursar (Grado Aspirado)
           </label>
           <select
             className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 p-2.5 w-full rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam dark:focus:ring-green-400 focus:border-transparent outline-none transition-all font-medium"
@@ -178,17 +177,17 @@ export const Student = () => {
             {...register("student.grado", { required: "Campo obligatorio" })}
           >
             <option value="">Seleccione el grado</option>
-            <option value="primero">Primero</option>
-            <option value="segundo">Segundo</option>
-            <option value="tercero">Tercero</option>
-            <option value="cuarto">Cuarto</option>
-            <option value="quinto">Quinto</option>
-            <option value="sexto">Sexto Grado</option>
-            <option value="septimo">Séptimo Grado</option>
-            <option value="octavo">Octavo Grado</option>
-            <option value="noveno">Noveno Grado</option>
-            <option value="decimo">Décimo Grado</option>
-            <option value="once">Once Grado</option>
+            <option value="PRIMERO">Primero</option>
+            <option value="SEGUNDO">Segundo</option>
+            <option value="TERCERO">Tercero</option>
+            <option value="CUARTO">Cuarto</option>
+            <option value="QUINTO">Quinto</option>
+            <option value="SEXTO">Sexto</option>
+            <option value="SEPTIMO">Séptimo</option>
+            <option value="OCTAVO">Octavo</option>
+            <option value="NOVENO">Noveno</option>
+            <option value="DECIMO">Décimo</option>
+            <option value="ONCE">Once</option>
           </select>
           {errors.student?.grado && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.student.grado.message}</p>

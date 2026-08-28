@@ -1,6 +1,5 @@
 import { useFormContext } from "react-hook-form";
 import { useState, useEffect } from "react";
-import Supabase from "../Supabase";
 
 export const FormAttendant = ({ attendantSelect }) => {
   const [attendantData, setAttendantData] = useState(null);
@@ -21,25 +20,12 @@ export const FormAttendant = ({ attendantSelect }) => {
     }
   }, [docValue]);
 
-  // 🔍 Buscar acudiente por documento
+  // 🔍 Buscar acudiente por documento (preparado para Firestore)
   const readAttendantData = async (doc) => {
     if (!doc || doc.trim().length < 5) {
       setAttendantData(null);
-      return; // evita búsquedas con menos de 5 caracteres
-    }
-
-    const { data: attendant, error } = await Supabase.from("attendant")
-      .select("*")
-      .eq("document_attendant", doc)
-      .maybeSingle(); // devuelve un único registro o null
-
-    if (error) {
-      console.error("Error al leer acudiente:", error);
-      setAttendantData(null);
       return;
     }
-
-    setAttendantData(attendant || null);
   };
 
   // 🧩 Actualiza los campos del formulario cuando cambie attendantData

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../../store/useAuthStore";
+import { addObservation } from "../../../services/observationService";
 
 export function AddAnnotationModal({ isOpen, onClose, studentDoc, onAnnotationAdded }) {
   const { user } = useAuthStore();
@@ -20,8 +21,6 @@ export function AddAnnotationModal({ isOpen, onClose, studentDoc, onAnnotationAd
 
     setIsSubmitting(true);
     try {
-      const sheetUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
-      
       const now = new Date();
       const dateStr = now.getFullYear() + '-' + 
                       String(now.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -29,39 +28,24 @@ export function AddAnnotationModal({ isOpen, onClose, studentDoc, onAnnotationAd
                       String(now.getHours()).padStart(2, '0') + ':' + 
                       String(now.getMinutes()).padStart(2, '0');
 
-      const payload = {
-        data: [
-          {
-            id_anotacion: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
-            student_doc: studentDoc,
-            profesor_doc: user?.id_documento,
-            profesor_nombre: user?.nombre,
-            fecha: dateStr,
-            categoria,
-            descripcion,
-            privacidad
-          }
-        ]
-      };
-
-      const res = await fetch(`${sheetUrl}?sheet=observador`, {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
+      await addObservation({
+        student_doc: studentDoc,
+        profesor_doc: user?.id_documento || "",
+        profesor_nombre: user?.nombre || "Docente",
+        fecha: dateStr,
+        categoria,
+        descripcion: descripcion.trim(),
+        privacidad
       });
-
-      if (!res.ok) throw new Error("Error al guardar anotación");
 
       toast.success("Anotación guardada exitosamente");
       setDescripcion("");
       setCategoria("Académica");
       setPrivacidad("Pública");
-      onAnnotationAdded(); // Refrescar lista
+      if (onAnnotationAdded) onAnnotationAdded();
       onClose();
     } catch (error) {
+      console.error("Error al guardar anotación:", error);
       toast.error(error.message || "Error al conectar con la base de datos");
     } finally {
       setIsSubmitting(false);

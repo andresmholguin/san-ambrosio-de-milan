@@ -1,6 +1,5 @@
 import { useFormContext } from "react-hook-form";
 import { useState, useEffect } from "react";
-import Supabase from "../Supabase";
 
 export const Father = () => {
   const [fatherData, setFatherData] = useState(null);
@@ -21,25 +20,12 @@ export const Father = () => {
     }
   }, [docValue]);
 
-  // 🔍 Buscar padre por documento
+  // 🔍 Buscar padre por documento (preparado para Firestore)
   const readFatherData = async (doc) => {
     if (!doc || doc.trim().length < 5) {
       setFatherData(null);
-      return; // evita búsquedas con menos de 5 caracteres
-    }
-
-    const { data: father, error } = await Supabase.from("fathers")
-      .select("*")
-      .eq("document_father", doc)
-      .maybeSingle(); // devuelve un único registro o null
-
-    if (error) {
-      console.error("Error al leer padre:", error);
-      setFatherData(null);
       return;
     }
-
-    setFatherData(father || null);
   };
 
   // 🧩 Actualiza los campos del formulario cuando cambie fatherData

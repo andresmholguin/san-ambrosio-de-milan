@@ -5,15 +5,14 @@ import { Student } from "../components/Student";
 import { Father } from "../components/Father";
 import { Mother } from "../components/Mother";
 import { Attendant } from "../components/Attendant";
-import { Footer } from "../components/Footer";
 import { useEffect, useState } from "react";
-import Supabase from "../Supabase";
+import { checkStudentExists, saveStudent } from "../services/studentService";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function UpdateForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
-  const [theme, setTheme] = useState(() => {
+  const [theme] = useState(() => {
     return localStorage.getItem("theme") || "light";
   });
 
@@ -51,11 +50,6 @@ export default function UpdateForm() {
     }
     localStorage.setItem("theme", theme);
   }, [theme]);
-
-  // Lectura de configuraciones de entorno
-  const googleSheetsUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
-  const isSheetsConfigured = !!googleSheetsUrl;
-  const isSupabaseConfigured = !!(import.meta.env.VITE_URL && import.meta.env.VITE_API_KEY);
 
   const methods = useForm({
     defaultValues: {
@@ -131,27 +125,24 @@ export default function UpdateForm() {
         return;
       }
 
-      // Verificación de duplicados en Google Sheets
+      // Verificación de duplicados en Firebase Firestore
       const studentDoc = watch("student.documento")?.trim();
       if (!studentDoc) return;
 
       const toastId = toast.loading("Verificando registro del estudiante...");
       try {
-        const response = await fetch(`${googleSheetsUrl}/search?student_doc=${studentDoc}`);
-        if (response.ok) {
-          const list = await response.json();
-          if (list && list.length > 0) {
-            toast.dismiss(toastId);
-            openModal(
-              "Estudiante ya registrado",
-              `El estudiante con número de documento ${studentDoc} ya se encuentra registrado en el sistema escolar. Verifique la información ingresada.`,
-              "error"
-            );
-            return;
-          }
+        const exists = await checkStudentExists(studentDoc);
+        if (exists) {
+          toast.dismiss(toastId);
+          openModal(
+            "Estudiante ya registrado",
+            `El estudiante con número de documento ${studentDoc} ya se encuentra registrado en el sistema escolar. Verifique la información ingresada.`,
+            "error"
+          );
+          return;
         }
       } catch (err) {
-        console.error("Error al buscar estudiante:", err);
+        console.error("Error al verificar estudiante:", err);
       } finally {
         toast.dismiss(toastId);
       }
@@ -192,12 +183,6 @@ export default function UpdateForm() {
   //                 SUBMIT PRINCIPAL
   // ---------------------------------------------------
   const onSubmit = async (data) => {
-    // Validar que Google Sheets esté configurado
-    if (!isSheetsConfigured) {
-      toast.error("No se puede guardar porque falta configurar la URL de Google Sheets.");
-      return;
-    }
-
     // Validar que al menos un acudiente tenga documento
     if (
       !data.father.documento &&
@@ -209,12 +194,9 @@ export default function UpdateForm() {
     }
 
     setIsSubmitting(true);
-    const toastId = toast.loading("Guardando datos...");
+    const toastId = toast.loading("Guardando datos en Firebase...");
 
     try {
-      // 1. Reestructurar datos para el API de Google Sheets (formato SheetDB)
-      // NOTA: los inputs "disabled" no se incluyen en el objeto `data` de RHF,
-      // por eso usamos getValues() para recuperar la dirección cuando viveConHijo está activo.
       const studentDir = data.student.direccion || getValues("student.direccion") || "";
       const studentBar = data.student.barrio || getValues("student.barrio") || "";
       const studentAddr = (studentDir.trim() + (studentBar ? " - " + studentBar.trim() : "")).toUpperCase();
@@ -241,69 +223,46 @@ export default function UpdateForm() {
                       String(now.getMinutes()).padStart(2, '0') + ':' + 
                       String(now.getSeconds()).padStart(2, '0');
 
-      const sheetdbPayload = {
-        data: [
-          {
-            fecha: dateStr,
-            student_doc: data.student.documento,
-            student_doc_type: data.student.tipoDocumento || "Tarjeta de Identidad",
-            student_name: (data.student.nombres || "").toUpperCase().trim(),
-            student_lastname: (data.student.apellidos || "").toUpperCase().trim(),
-            student_birth: data.student.nacimiento,
-            student_grade: data.student.grado,
-            student_address: studentAddr,
-            attendant_type: data.attendant.select,
-            father_doc_type: data.father.tipoDocumento || "Cédula de Ciudadanía",
-            father_doc: data.father.documento,
-            father_name: (data.father.nombres || "").toUpperCase().trim(),
-            father_lastname: (data.father.apellidos || "").toUpperCase().trim(),
-            father_birth: data.father.nacimiento || "",
-            father_email: data.father.email || "",
-            father_phone: data.father.phone || "",
-            father_address: fatherAddr,
-            mother_doc_type: data.mother.tipoDocumento || "Cédula de Ciudadanía",
-            mother_doc: data.mother.documento,
-            mother_name: (data.mother.nombres || "").toUpperCase().trim(),
-            mother_lastname: (data.mother.apellidos || "").toUpperCase().trim(),
-            mother_birth: data.mother.nacimiento || "",
-            mother_email: data.mother.email || "",
-            mother_phone: data.mother.phone || "",
-            mother_address: motherAddr,
-            attendant_doc: data.attendant.documento || "",
-            attendant_name: (data.attendant.nombres || "").toUpperCase().trim(),
-            attendant_lastname: (data.attendant.apellidos || "").toUpperCase().trim(),
-            attendant_relation: (data.attendant.parentesco || "").toUpperCase().trim(),
-            attendant_email: data.attendant.email || "",
-            attendant_phone: data.attendant.phone || "",
-            attendant_address: attendantAddr
-          }
-        ]
+      const studentPayload = {
+        fecha: dateStr,
+        student_doc: data.student.documento,
+        student_doc_type: data.student.tipoDocumento || "Tarjeta de Identidad",
+        student_name: (data.student.nombres || "").toUpperCase().trim(),
+        student_lastname: (data.student.apellidos || "").toUpperCase().trim(),
+        student_birth: data.student.nacimiento,
+        grado_aspirado: (data.student.grado || "").toUpperCase().trim(),
+        student_grade: "Sin Asignar",
+        student_grade_section: "Sin Asignar",
+        student_address: studentAddr,
+        attendant_type: data.attendant.select,
+        father_doc_type: data.father.tipoDocumento || "Cédula de Ciudadanía",
+        father_doc: data.father.documento,
+        father_name: (data.father.nombres || "").toUpperCase().trim(),
+        father_lastname: (data.father.apellidos || "").toUpperCase().trim(),
+        father_birth: data.father.nacimiento || "",
+        father_email: data.father.email || "",
+        father_phone: data.father.phone || "",
+        father_address: fatherAddr,
+        mother_doc_type: data.mother.tipoDocumento || "Cédula de Ciudadanía",
+        mother_doc: data.mother.documento,
+        mother_name: (data.mother.nombres || "").toUpperCase().trim(),
+        mother_lastname: (data.mother.apellidos || "").toUpperCase().trim(),
+        mother_birth: data.mother.nacimiento || "",
+        mother_email: data.mother.email || "",
+        mother_phone: data.mother.phone || "",
+        mother_address: motherAddr,
+        attendant_doc: data.attendant.documento || "",
+        attendant_name: (data.attendant.nombres || "").toUpperCase().trim(),
+        attendant_lastname: (data.attendant.apellidos || "").toUpperCase().trim(),
+        attendant_relation: (data.attendant.parentesco || "").toUpperCase().trim(),
+        attendant_email: data.attendant.email || "",
+        attendant_phone: data.attendant.phone || "",
+        attendant_address: attendantAddr
       };
 
-      // 2. Guardar en Google Sheets (Almacenamiento Primario vía API)
-      try {
-        const response = await fetch(googleSheetsUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(sheetdbPayload),
-        });
+      // Guardar en Firestore
+      await saveStudent(studentPayload);
 
-        if (!response.ok) {
-          throw new Error(`Servidor de API Sheets respondió con código ${response.status}`);
-        }
-
-        const resData = await response.json();
-        if (!resData || (!resData.created && resData.status !== "success" && !Array.isArray(resData))) {
-          throw new Error(resData.error || "No se pudo registrar la fila en el API de Google Sheets.");
-        }
-      } catch (sheetError) {
-        console.error("Error al enviar a API de Google Sheets:", sheetError);
-        throw new Error(`Google Sheets API: ${sheetError.message}`);
-      }
-
-      // 2. Notificación final al usuario
       toast.dismiss(toastId);
       openModal(
         "¡Registro Exitoso!",
@@ -379,19 +338,6 @@ export default function UpdateForm() {
         <p className="md:text-[1.1rem] text-slate-500 dark:text-slate-400 mt-2 transition-colors duration-300 text-center max-w-xl leading-relaxed">
           {getSubtitle()}
         </p>
-
-        {/* Banner: Falta Google Sheets (Obligatorio) */}
-        {!isSheetsConfigured && (
-          <div className="w-full bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg my-4 shadow-md text-sm md:text-base">
-            <p className="font-bold">⚠️ Falta configuración de Google Sheets (Obligatorio)</p>
-            <p className="mt-1">
-              Crea un archivo llamado <code className="bg-red-200 px-1 py-0.5 rounded font-mono">.env</code> en la raíz del proyecto y agrega la URL de tu aplicación web de Google Apps Script:
-            </p>
-            <pre className="bg-red-950 text-red-200 p-2 rounded mt-2 text-xs overflow-x-auto font-mono text-left">
-              {`VITE_GOOGLE_SHEETS_URL=https://script.google.com/macros/s/xxxx/exec`}
-            </pre>
-          </div>
-        )}
 
         {/* Stepper Indicator - Desktop */}
         <div className="hidden md:flex items-center justify-center w-full max-w-2xl my-8 relative px-10">

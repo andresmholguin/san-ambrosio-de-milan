@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { hashPassword } from "../../utils/crypto";
+import { findUserByDoc, createStaffPassword } from "../../services/authService";
 import toast from "react-hot-toast";
 
 export default function Login() {
@@ -22,24 +23,15 @@ export default function Login() {
     setIsLoading(true);
     setErrorMsg("");
     try {
-      // Buscar el usuario por documento en la tabla "users" en Google Sheets (vía SheetDB)
-      const sheetUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
-      if (!sheetUrl) throw new Error("Falta configuración de base de datos.");
+      // Buscar usuario en Firestore
+      const user = await findUserByDoc(documento.trim());
 
-      // SheetDB Search API: /search?id_documento=123&sheet=users
-      const res = await fetch(`${sheetUrl}/search?id_documento=${documento}&sheet=users`);
-      if (!res.ok) throw new Error("Error al consultar el usuario. Por favor intente más tarde.");
-      
-      const data = await res.json();
-
-      if (!data || data.length === 0) {
+      if (!user) {
         setErrorMsg("El documento ingresado no se encuentra registrado como administrador o profesor en nuestra base de datos.");
         setIsLoading(false);
         return;
       }
 
-      // Tomamos el primer registro
-      const user = data[0];
       setUserData(user);
 
       if (!user.password_hash) {
@@ -50,7 +42,8 @@ export default function Login() {
         setStep(2);
       }
     } catch (err) {
-      setErrorMsg(err.message);
+      console.error("Error al consultar usuario:", err);
+      setErrorMsg(err.message || "Error al conectar con la base de datos.");
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +64,7 @@ export default function Login() {
         setErrorMsg("La contraseña ingresada es incorrecta. Por favor, inténtalo de nuevo.");
       }
     } catch (err) {
+      console.error("Error al verificar credenciales:", err);
       setErrorMsg("Error inesperado al iniciar sesión.");
     } finally {
       setIsLoading(false);
@@ -98,31 +92,13 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const hashed = await hashPassword(password);
-      const sheetUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
-      
-      // En SheetDB, actualizamos buscando por id_documento
-      const res = await fetch(`${sheetUrl}/id_documento/${userData.id_documento}?sheet=users`, {
-        method: "PUT",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          data: {
-            password_hash: hashed,
-            primer_ingreso: "false"
-          }
-        })
-      });
-
-      if (!res.ok) throw new Error("Fallo la comunicación con la base de datos.");
+      const hashed = await createStaffPassword(userData.id || userData.id_documento, password);
 
       toast.success("Contraseña creada exitosamente. ¡Bienvenido!");
-      // Actualizar el estado local antes de login
       const updatedUser = { ...userData, password_hash: hashed, primer_ingreso: "false" };
       login(updatedUser);
     } catch (err) {
+      console.error("Error al guardar contraseña:", err);
       toast.error("Error al crear la contraseña.");
     } finally {
       setIsLoading(false);

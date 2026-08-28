@@ -4,51 +4,60 @@ import toast from "react-hot-toast";
 import { AddAnnotationModal } from "./components/AddAnnotationModal";
 import { useAuthStore } from "../../store/useAuthStore";
 import { generateStudentReportPDF } from "../../utils/generatePDF";
+import { getStudentByDoc } from "../../services/studentService";
+import { subscribeToObservations } from "../../services/observationService";
+import { getAttendancesByStudent } from "../../services/attendanceService";
 
 export default function StudentProfile() {
   const { id } = useParams();
   const { user } = useAuthStore();
   const [student, setStudent] = useState(null);
   const [annotations, setAnnotations] = useState([]);
+  const [attendances, setAttendances] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Estado para el acordeón
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
 
-  const sheetUrl = import.meta.env.VITE_GOOGLE_SHEETS_URL;
-
-  const fetchStudentAndAnnotations = async () => {
-    setIsLoading(true);
-    try {
-      const resStudent = await fetch(`${sheetUrl}/search?student_doc=${id}`);
-      if (!resStudent.ok) throw new Error("Error fetching student");
-      const dataStudent = await resStudent.json();
-      
-      if (dataStudent && dataStudent.length > 0) {
-        setStudent(dataStudent[0]);
-      } else {
-        toast.error("Estudiante no encontrado");
-        setIsLoading(false);
-        return;
-      }
-
-      const resAnn = await fetch(`${sheetUrl}/search?student_doc=${id}&sheet=observador`);
-      if (resAnn.ok) {
-        const dataAnn = await resAnn.json();
-        const validAnn = Array.isArray(dataAnn) ? dataAnn.filter(a => a.id_anotacion) : [];
-        setAnnotations(validAnn.reverse());
-      }
-    } catch (error) {
-      toast.error("Error al cargar perfil del estudiante");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchStudentAndAnnotations();
-  }, [id, sheetUrl]);
+    let unsubscribeObs = () => {};
+
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const studentData = await getStudentByDoc(id);
+        if (!studentData) {
+          toast.error("Estudiante no encontrado");
+          setIsLoading(false);
+          return;
+        }
+        setStudent(studentData);
+
+        // Cargar inasistencias del estudiante
+        const attList = await getAttendancesByStudent(id);
+        setAttendances(attList);
+
+        // Suscribirse en tiempo real a las observaciones
+        unsubscribeObs = subscribeToObservations(
+          id,
+          (obsList) => setAnnotations(obsList),
+          (err) => console.error("Error al escuchar observaciones:", err)
+        );
+      } catch (error) {
+        console.error("Error al cargar perfil:", error);
+        toast.error("Error al cargar perfil del estudiante");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      unsubscribeObs();
+    };
+  }, [id]);
 
   if (isLoading) {
     return <div className="p-12 text-center text-slate-500">Cargando perfil...</div>;
@@ -102,8 +111,8 @@ export default function StudentProfile() {
             <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
               {student.student_name} {student.student_lastname}
             </h1>
-            <p className="text-slate-500 dark:text-slate-400">
-              Documento: {student.student_doc} | Grado: {student.student_grade}
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
+              Doc: <strong>{student.student_doc}</strong> &bull; Grado Aspirado: <strong className="text-blue-600 dark:text-blue-400">{student.grado_aspirado || student.student_grade || "Sin Definir"}</strong> &bull; Salón Asignado: <strong className="text-green-600 dark:text-green-400">{student.student_grade_section && student.student_grade_section !== "Sin Asignar" ? student.student_grade_section : "Sin Asignar"}</strong>
             </p>
           </div>
         </div>
@@ -111,13 +120,24 @@ export default function StudentProfile() {
           {user?.rol === 'admin' && (
             <Link 
               to={`/admin/estudiante/${id}/editar`}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2 text-sm"
+              className="bg-Sam hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
               Editar Datos
             </Link>
           )}
-          <Link to="/admin" className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-semibold px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg transition-colors flex items-center justify-center">
+          <button
+            onClick={handleDownloadPDF}
+            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold py-2 px-4 rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+          >
+            Descargar PDF
+          </button>
+          <Link 
+            to="/admin" 
+            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold py-2 px-4 rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-sm"
+          >
             Volver
           </Link>
         </div>
@@ -128,6 +148,8 @@ export default function StudentProfile() {
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 border-b border-gray-100 dark:border-slate-700 pb-2">Información del Estudiante</h3>
           <ul className="space-y-3 text-sm">
+            <li><span className="font-semibold text-slate-500 dark:text-slate-400">Grado Aspirado:</span> <span className="font-bold text-blue-600 dark:text-blue-400">{student.grado_aspirado || student.student_grade || "Sin Definir"}</span></li>
+            <li><span className="font-semibold text-slate-500 dark:text-slate-400">Salón Asignado:</span> <span className="font-bold text-green-600 dark:text-green-400">{student.student_grade_section && student.student_grade_section !== "Sin Asignar" ? student.student_grade_section : "Sin Asignar"}</span></li>
             <li><span className="font-semibold text-slate-500 dark:text-slate-400">Fecha Nacimiento:</span> <span className="dark:text-slate-200">{student.student_birth}</span></li>
             <li><span className="font-semibold text-slate-500 dark:text-slate-400">Dirección:</span> <span className="dark:text-slate-200">{student.student_address}</span></li>
           </ul>
@@ -244,11 +266,84 @@ export default function StudentProfile() {
         </div>
       </div>
 
+      {/* Módulo Historial de Inasistencias y Excusas de Padres */}
+      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+          <svg className="w-6 h-6 text-Sam" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Historial de Inasistencias y Excusas ({attendances.length})
+        </h2>
+        <p className="text-xs text-slate-400 mb-6">
+          Registro de faltas, retardos y las respuestas enviadas por los padres/acudientes.
+        </p>
+
+        {attendances.length === 0 ? (
+          <div className="text-center text-slate-500 p-6 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl text-xs">
+            Este estudiante no tiene inasistencias ni faltas registradas.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {attendances.map((att) => {
+              const isJustified = att.justification_status === "Justificada por Acudiente" || att.parent_response;
+              return (
+                <div 
+                  key={att.id} 
+                  className="p-4 rounded-2xl border border-gray-200 dark:border-slate-700/80 bg-slate-50/50 dark:bg-slate-900/40"
+                >
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-slate-800 dark:text-white font-mono">
+                        📅 {att.fecha}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                        att.estado === "Falta" 
+                          ? "bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300"
+                          : "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300"
+                      }`}>
+                        {att.estado}
+                      </span>
+                    </div>
+
+                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                      isJustified
+                        ? "bg-green-100 text-green-700 dark:bg-green-950/60 dark:text-green-300"
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                    }`}>
+                      {isJustified ? "✓ Justificada por Acudiente" : "⏳ Pendiente de Respuesta"}
+                    </span>
+                  </div>
+
+                  {att.parent_response ? (
+                    <div className="mt-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-green-200 dark:border-green-900/40 text-xs space-y-1.5 text-slate-700 dark:text-slate-200">
+                      <p>
+                        <strong className="text-Sam dark:text-green-400">Motivo:</strong> {att.parent_response.motivo}
+                      </p>
+                      <p>
+                        <strong className="text-slate-500">Explicación del Acudiente:</strong> {att.parent_response.detalle}
+                      </p>
+                      <div className="flex justify-between text-[11px] text-slate-400 pt-1 border-t border-gray-100 dark:border-slate-700/60">
+                        <span>Respondido por: <strong>{att.parent_response.parentName}</strong> {att.parent_response.parentPhone && `(${att.parent_response.parentPhone})`}</span>
+                        <span>{new Date(att.parent_response.respondedAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic mt-1">
+                      Registrado por: {att.profesor}. Notificación enviada al correo del acudiente.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       <AddAnnotationModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         studentDoc={student.student_doc}
-        onAnnotationAdded={fetchStudentAndAnnotations}
+        onAnnotationAdded={() => {}}
       />
     </div>
   );

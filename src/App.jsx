@@ -4,6 +4,7 @@ import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import UpdateForm from "./pages/UpdateForm";
 import Admin from "./pages/admin/Admin";
+import JustifyAbsence from "./pages/JustifyAbsence";
 
 export default function App() {
   const [theme, setTheme] = useState(() => {
@@ -26,6 +27,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<UpdateForm />} />
         <Route path="/admin/*" element={<Admin />} />
+        <Route path="/justificar-inasistencia/:token" element={<JustifyAbsence />} />
       </Routes>
 
       <Footer />
