@@ -89,6 +89,28 @@ export async function markNotificationAsRead(notifId, userDoc) {
 }
 
 /**
+ * Registra el Service Worker de notificaciones pasando las credenciales por query params.
+ */
+export async function registerNotificationServiceWorker() {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return null;
+  try {
+    const params = new URLSearchParams({
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+      appId: import.meta.env.VITE_FIREBASE_APP_ID || ""
+    }).toString();
+
+    return await navigator.serviceWorker.register(`/firebase-messaging-sw.js?${params}`);
+  } catch (err) {
+    console.warn("No se pudo registrar el Service Worker de notificaciones:", err);
+    return null;
+  }
+}
+
+/**
  * Inicializa y solicita permisos para Web Push & Mobile Push Notifications (FCM).
  * @returns {Promise<string|null>} Token FCM del dispositivo o null si no se concede permiso.
  */
@@ -105,13 +127,14 @@ export async function requestPushPermission() {
   }
 
   try {
+    const swRegistration = await registerNotificationServiceWorker();
     const messaging = await initMessaging();
     if (!messaging) return null;
 
     const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY || undefined;
     const currentToken = await getToken(messaging, {
       vapidKey: vapidKey || undefined,
-      serviceWorkerRegistration: await navigator.serviceWorker.ready
+      serviceWorkerRegistration: swRegistration || (await navigator.serviceWorker.ready)
     });
 
     if (currentToken) {
