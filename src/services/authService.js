@@ -187,6 +187,51 @@ export async function registerStaff(staffData) {
 }
 
 /**
+ * Registro PÚBLICO para profesores. Entran con estado pendiente.
+ */
+export async function registerPublicTeacher(staffData) {
+  const docId = String(staffData.id_documento).trim();
+  if (!docId) throw new Error("El documento es obligatorio");
+
+  const docRef = doc(db, USERS_COLLECTION, docId);
+  const existing = await getDoc(docRef);
+  if (existing.exists()) {
+    throw new Error("Ya existe una solicitud o usuario con este documento.");
+  }
+
+  const payload = {
+    id_documento: docId.toUpperCase(),
+    nombre: (staffData.nombre || "").toUpperCase().trim(),
+    apellidos: (staffData.apellidos || "").toUpperCase().trim(),
+    fecha_nacimiento: staffData.fecha_nacimiento || "",
+    email: (staffData.email || "").toLowerCase().trim(),
+    telefono: staffData.telefono || "",
+    direccion: (staffData.direccion || "").toUpperCase().trim(),
+    titulo_profesional: (staffData.titulo_profesional || "").toUpperCase().trim(),
+    experiencia: staffData.experiencia || "",
+    eps: (staffData.eps || "").toUpperCase().trim(),
+    fondo_pension: (staffData.fondo_pension || "").toUpperCase().trim(),
+    fondo_cesantias: (staffData.fondo_cesantias || "").toUpperCase().trim(),
+    tipo_sangre: (staffData.tipo_sangre || "").toUpperCase().trim(),
+    talla_camisa: (staffData.talla_camisa || "").toUpperCase().trim(),
+    alergias: (staffData.alergias || "").toUpperCase().trim(),
+    contacto_emergencia: (staffData.contacto_emergencia || "").toUpperCase().trim(),
+    telefono_emergencia: staffData.telefono_emergencia || "",
+    parentesco_emergencia: (staffData.parentesco_emergencia || "").toUpperCase().trim(),
+    
+    rol: "no_asignado",
+    estado: "pendiente",
+    director_grupo: "NINGUNO",
+    password_hash: "",
+    primer_ingreso: "true",
+    createdAt: new Date().toISOString()
+  };
+
+  await setDoc(docRef, payload);
+  return payload;
+}
+
+/**
  * Obtiene todos los profesores registrados.
  * @returns {Promise<Array>}
  */

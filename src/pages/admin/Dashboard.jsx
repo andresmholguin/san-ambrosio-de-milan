@@ -4,6 +4,7 @@ import { StudentsList } from "./components/StudentsList";
 import { ProfessorsList } from "./components/ProfessorsList";
 import { AttendanceForm } from "./components/AttendanceForm";
 import { ClassroomsManager } from "./components/ClassroomsManager";
+import { SettingsFormBuilder } from "./components/SettingsFormBuilder";
 
 export default function Dashboard() {
   const { user } = useAuthStore();
@@ -38,7 +39,7 @@ export default function Dashboard() {
         >
           Control de Asistencia
         </button>
-        {user?.rol === "admin" && (
+        {(user?.rol === "admin" || user?.rol === "superadmin") && (
           <>
             <button
               onClick={() => setActiveTab("salones")}
@@ -62,13 +63,27 @@ export default function Dashboard() {
             </button>
           </>
         )}
+        
+        {user?.rol === "superadmin" && (
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`px-4 py-2 font-bold border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === "settings" 
+                ? "border-Sam text-Sam" 
+                : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+            }`}
+          >
+            Configurar Formularios
+          </button>
+        )}
       </div>
 
       <div>
         {activeTab === "estudiantes" && <StudentsList />}
         {activeTab === "asistencia" && <AttendanceForm />}
-        {activeTab === "salones" && user?.rol === "admin" && <ClassroomsManager />}
-        {activeTab === "profesores" && user?.rol === "admin" && <ProfessorsList />}
+        {activeTab === "salones" && (user?.rol === "admin" || user?.rol === "superadmin") && <ClassroomsManager />}
+        {activeTab === "profesores" && (user?.rol === "admin" || user?.rol === "superadmin") && <ProfessorsList />}
+        {activeTab === "settings" && user?.rol === "superadmin" && <SettingsFormBuilder />}
       </div>
     </div>
   );

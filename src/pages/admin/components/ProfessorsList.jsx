@@ -234,11 +234,13 @@ export function ProfessorsList() {
                   </td>
                   <td className="p-3">
                     <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                      st.estado === "Inactivo" 
+                      st.estado === "Inactivo"
                         ? "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300"
-                        : "bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-300"
+                        : st.estado === "pendiente"
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+                          : "bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-300"
                     }`}>
-                      {st.estado || "Activo"}
+                      {st.estado === "pendiente" ? "Pendiente" : (st.estado || "Activo")}
                     </span>
                   </td>
                   <td className="p-3 text-right">
@@ -276,7 +278,7 @@ export function ProfessorsList() {
       {/* Modal Editar Personal */}
       {editingStaff && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-md w-full p-6 md:p-8 border border-gray-100 dark:border-slate-700">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-md w-full p-6 md:p-8 border border-gray-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-slate-800 dark:text-white">
                 Editar Personal: {editingStaff.nombre}
@@ -303,6 +305,7 @@ export function ProfessorsList() {
                   onChange={(e) => setEditRol(e.target.value)}
                   className="p-2.5 bg-gray-50 dark:bg-slate-900 border rounded-xl w-full outline-none"
                 >
+                  <option value="no_asignado">-- Pendiente de Asignar --</option>
                   <option value="profesor">Profesor / Docente</option>
                   <option value="admin">Administrador / Directivo</option>
                 </select>
@@ -325,6 +328,7 @@ export function ProfessorsList() {
                   onChange={(e) => setEditEstado(e.target.value)}
                   className="p-2.5 bg-gray-50 dark:bg-slate-900 border rounded-xl w-full outline-none"
                 >
+                  <option value="pendiente">Pendiente de Aprobación</option>
                   <option value="Activo">Activo</option>
                   <option value="Inactivo">Inactivo (Bloquear Acceso)</option>
                 </select>

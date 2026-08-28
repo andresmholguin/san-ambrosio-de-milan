@@ -1,529 +1,380 @@
-import "../index.css";
-import { useForm, FormProvider } from "react-hook-form";
-import { Header } from "../components/Header";
-import { Student } from "../components/Student";
-import { Father } from "../components/Father";
-import { Mother } from "../components/Mother";
-import { Attendant } from "../components/Attendant";
-import { useEffect, useState } from "react";
-import { checkStudentExists, saveStudent } from "../services/studentService";
+import { useState, useEffect } from "react";
+import { getFormSchema } from "../services/formSchemaService";
+import { saveStudent } from "../services/studentService";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function UpdateForm() {
+  const [schema, setSchema] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [step, setStep] = useState(1);
-  const [theme] = useState(() => {
-    return localStorage.getItem("theme") || "light";
-  });
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [formData, setFormData] = useState({});
+  
+  // Wizard State
+  const [currentStep, setCurrentStep] = useState(0); // Index de la sección actual
 
-  const [modal, setModal] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    type: "error", // "error" | "success"
-  });
-
-  const closeModal = () => {
-    setModal((prev) => ({ ...prev, isOpen: false }));
-    if (modal.type === "success") {
-      reset({
-        student: { documento: "", nombres: "", apellidos: "", tipoDocumento: "Tarjeta de Identidad", nacimiento: "", grado: "", direccion: "" },
-        father: { documento: "", nombres: "", apellidos: "", ocupacion: "", nacimiento: "", email: "", phone: "", direccion: "" },
-        mother: { documento: "", nombres: "", apellidos: "", ocupacion: "", nacimiento: "", email: "", phone: "", direccion: "" },
-        attendant: { select: "", documento: "", nombres: "", apellidos: "", tipoDocumento: "Cédula de Ciudadanía", parentesco: "", email: "", phone: "", direccion: "", contactoEmergencia: false, declaracionVeracidad: false },
-      });
-      setStep(1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  const openModal = (title, message, type = "error") => {
-    setModal({ isOpen: true, title, message, type });
-  };
-
-  // 🔥 Manejo del Dark Mode a nivel de documento
   useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    loadSchema();
+  }, []);
 
-  const methods = useForm({
-    defaultValues: {
-      student: { documento: "", nombres: "", apellidos: "", tipoDocumento: "Tarjeta de Identidad", nacimiento: "", grado: "", direccion: "", barrio: "" },
-      father: { documento: "", nombres: "", apellidos: "", ocupacion: "", nacimiento: "", email: "", phone: "", direccion: "", barrio: "", viveConHijo: false },
-      mother: { documento: "", nombres: "", apellidos: "", ocupacion: "", nacimiento: "", email: "", phone: "", direccion: "", barrio: "", viveConHijo: false },
-      attendant: { select: "", documento: "", nombres: "", apellidos: "", tipoDocumento: "Cédula de Ciudadanía", parentesco: "", email: "", phone: "", direccion: "", barrio: "", viveConHijo: false, declaracionVeracidad: false },
-    },
-  });
-
-  const { handleSubmit, watch, setValue, reset, trigger, getValues } = methods;
-
-  // 🔥 Sincronizar direcciones y barrios correctamente
-  useEffect(() => {
-    const subscription = watch((value, { name }) => {
-      // 1. Si cambia la dirección del estudiante
-      if (name === "student.direccion") {
-        const dir = value.student.direccion || "";
-        if (value.father?.viveConHijo) {
-          setValue("father.direccion", dir);
-        }
-        if (value.mother?.viveConHijo) {
-          setValue("mother.direccion", dir);
-        }
-        setValue("attendant.direccion", dir);
-      }
-
-      // 2. Si cambia el barrio del estudiante
-      if (name === "student.barrio") {
-        const bar = value.student.barrio || "";
-        if (value.father?.viveConHijo) {
-          setValue("father.barrio", bar);
-        }
-        if (value.mother?.viveConHijo) {
-          setValue("mother.barrio", bar);
-        }
-        setValue("attendant.barrio", bar);
-      }
-
-      // 3. Si cambia el checkbox de "viveConHijo" del padre
-      if (name === "father.viveConHijo") {
-        if (value.father.viveConHijo) {
-          const studentDir = getValues("student.direccion") || "";
-          const studentBar = getValues("student.barrio") || "";
-          setValue("father.direccion", studentDir);
-          setValue("father.barrio", studentBar);
-        }
-      }
-
-      // 4. Si cambia el checkbox de "viveConHijo" de la madre
-      if (name === "mother.viveConHijo") {
-        if (value.mother.viveConHijo) {
-          const studentDir = getValues("student.direccion") || "";
-          const studentBar = getValues("student.barrio") || "";
-          setValue("mother.direccion", studentDir);
-          setValue("mother.barrio", studentBar);
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [watch, setValue, getValues]);
-
-  // ---------------------------------------------------
-  //                 NAVEGACIÓN DEL STEPPER
-  // ---------------------------------------------------
-  const handleNext = async () => {
-    if (step === 1) {
-      // Validar datos de Estudiante en el form
-      const isValid = await trigger("student");
-      if (!isValid) {
-        toast.error("Por favor complete los campos obligatorios del estudiante.");
-        return;
-      }
-
-      // Verificación de duplicados en Firebase Firestore
-      const studentDoc = watch("student.documento")?.trim();
-      if (!studentDoc) return;
-
-      const toastId = toast.loading("Verificando registro del estudiante...");
-      try {
-        const exists = await checkStudentExists(studentDoc);
-        if (exists) {
-          toast.dismiss(toastId);
-          openModal(
-            "Estudiante ya registrado",
-            `El estudiante con número de documento ${studentDoc} ya se encuentra registrado en el sistema escolar. Verifique la información ingresada.`,
-            "error"
-          );
-          return;
-        }
-      } catch (err) {
-        console.error("Error al verificar estudiante:", err);
-      } finally {
-        toast.dismiss(toastId);
-      }
-
-      setStep(2);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-
-    } else if (step === 2) {
-      // Validar que al menos un padre tenga documento diligenciado
-      const motherDoc = getValues("mother.documento");
-      const fatherDoc = getValues("father.documento");
-      
-      if ((!motherDoc || motherDoc.trim() === "") && (!fatherDoc || fatherDoc.trim() === "")) {
-        toast.error("Debe diligenciar los datos de al menos un padre o madre para continuar.");
-        return;
-      }
-
-      // Validar datos de Padres en el form
-      const isValid = await trigger(["father", "mother"]);
-      if (!isValid) {
-        toast.error("Por favor corrija los errores en los datos de los padres.");
-        return;
-      }
-
-      setStep(3);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  const handleBack = () => {
-    if (step > 1) {
-      setStep((prev) => prev - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  // ---------------------------------------------------
-  //                 SUBMIT PRINCIPAL
-  // ---------------------------------------------------
-  const onSubmit = async (data) => {
-    // Validar que al menos un acudiente tenga documento
-    if (
-      !data.father.documento &&
-      !data.mother.documento &&
-      !data.attendant.documento
-    ) {
-      toast.error("Debe registrar al menos un acudiente (padre, madre o acudiente).");
-      return;
-    }
-
-    setIsSubmitting(true);
-    const toastId = toast.loading("Guardando datos en Firebase...");
-
+  const loadSchema = async () => {
     try {
-      const studentDir = data.student.direccion || getValues("student.direccion") || "";
-      const studentBar = data.student.barrio || getValues("student.barrio") || "";
-      const studentAddr = (studentDir.trim() + (studentBar ? " - " + studentBar.trim() : "")).toUpperCase();
-
-      const fatherVive = getValues("father.viveConHijo");
-      const fatherDir = fatherVive ? studentDir : (data.father.direccion || getValues("father.direccion") || "");
-      const fatherBar = fatherVive ? studentBar : (data.father.barrio || getValues("father.barrio") || "");
-      const fatherAddr = (fatherDir.trim() + (fatherBar ? " - " + fatherBar.trim() : "")).toUpperCase();
-
-      const motherVive = getValues("mother.viveConHijo");
-      const motherDir = motherVive ? studentDir : (data.mother.direccion || getValues("mother.direccion") || "");
-      const motherBar = motherVive ? studentBar : (data.mother.barrio || getValues("mother.barrio") || "");
-      const motherAddr = (motherDir.trim() + (motherBar ? " - " + motherBar.trim() : "")).toUpperCase();
-
-      const attendantDir = data.attendant.direccion || getValues("attendant.direccion") || studentDir;
-      const attendantBar = data.attendant.barrio || getValues("attendant.barrio") || studentBar;
-      const attendantAddr = (attendantDir.trim() + (attendantBar ? " - " + attendantBar.trim() : "")).toUpperCase();
-
-      const now = new Date();
-      const dateStr = now.getFullYear() + '-' + 
-                      String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                      String(now.getDate()).padStart(2, '0') + ' ' + 
-                      String(now.getHours()).padStart(2, '0') + ':' + 
-                      String(now.getMinutes()).padStart(2, '0') + ':' + 
-                      String(now.getSeconds()).padStart(2, '0');
-
-      const studentPayload = {
-        fecha: dateStr,
-        student_doc: data.student.documento,
-        student_doc_type: data.student.tipoDocumento || "Tarjeta de Identidad",
-        student_name: (data.student.nombres || "").toUpperCase().trim(),
-        student_lastname: (data.student.apellidos || "").toUpperCase().trim(),
-        student_birth: data.student.nacimiento,
-        grado_aspirado: (data.student.grado || "").toUpperCase().trim(),
-        student_grade: "Sin Asignar",
-        student_grade_section: "Sin Asignar",
-        student_address: studentAddr,
-        attendant_type: data.attendant.select,
-        father_doc_type: data.father.tipoDocumento || "Cédula de Ciudadanía",
-        father_doc: data.father.documento,
-        father_name: (data.father.nombres || "").toUpperCase().trim(),
-        father_lastname: (data.father.apellidos || "").toUpperCase().trim(),
-        father_birth: data.father.nacimiento || "",
-        father_email: data.father.email || "",
-        father_phone: data.father.phone || "",
-        father_address: fatherAddr,
-        mother_doc_type: data.mother.tipoDocumento || "Cédula de Ciudadanía",
-        mother_doc: data.mother.documento,
-        mother_name: (data.mother.nombres || "").toUpperCase().trim(),
-        mother_lastname: (data.mother.apellidos || "").toUpperCase().trim(),
-        mother_birth: data.mother.nacimiento || "",
-        mother_email: data.mother.email || "",
-        mother_phone: data.mother.phone || "",
-        mother_address: motherAddr,
-        attendant_doc: data.attendant.documento || "",
-        attendant_name: (data.attendant.nombres || "").toUpperCase().trim(),
-        attendant_lastname: (data.attendant.apellidos || "").toUpperCase().trim(),
-        attendant_relation: (data.attendant.parentesco || "").toUpperCase().trim(),
-        attendant_email: data.attendant.email || "",
-        attendant_phone: data.attendant.phone || "",
-        attendant_address: attendantAddr
-      };
-
-      // Guardar en Firestore
-      await saveStudent(studentPayload);
-
-      toast.dismiss(toastId);
-      openModal(
-        "¡Registro Exitoso!",
-        "La actualización de datos del estudiante se ha guardado correctamente.",
-        "success"
-      );
-
+      const data = await getFormSchema("student_form");
+      if (data) {
+        setSchema(data);
+        const initialData = {};
+        data.sections.forEach(sec => {
+          sec.elements.forEach(el => {
+            if (el.type === "field" && el.id) {
+              initialData[el.id] = el.inputType === 'checkbox' ? false : "";
+            }
+          });
+        });
+        setFormData(initialData);
+      } else {
+        toast.error("El esquema del formulario de estudiantes no fue encontrado.");
+      }
     } catch (error) {
-      console.error("Error en proceso de guardado:", error);
-      toast.error(error.message || "No se pudieron guardar los datos.", { id: toastId });
+      toast.error("Error al cargar la configuración del formulario.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    if (type === 'checkbox') {
+      setFormData(prev => {
+        const newData = { ...prev, [name]: checked };
+        // Autofill logic for same address
+        if (checked) {
+          if (name === "padre_misma_direccion") {
+            newData.padre_direccion = prev.estudiante_direccion || "";
+            newData.padre_barrio = prev.estudiante_barrio || "";
+          }
+          if (name === "madre_misma_direccion") {
+            newData.madre_direccion = prev.estudiante_direccion || "";
+            newData.madre_barrio = prev.estudiante_barrio || "";
+          }
+        }
+        return newData;
+      });
+    } else if (type === 'file') {
+      setFormData(prev => ({ ...prev, [name]: files[0] }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleParentescoSelect = (role) => {
+    setFormData(prev => {
+      const newData = { ...prev, acudiente_parentesco: role };
+      if (role === "Madre") {
+        newData.acudiente_nombre = prev.madre_nombre || "";
+        newData.acudiente_documento = prev.madre_documento || "";
+        newData.acudiente_celular = prev.madre_celular || "";
+        newData.acudiente_email = prev.madre_email || "";
+      } else if (role === "Padre") {
+        newData.acudiente_nombre = prev.padre_nombre || "";
+        newData.acudiente_documento = prev.padre_documento || "";
+        newData.acudiente_celular = prev.padre_celular || "";
+        newData.acudiente_email = prev.padre_email || "";
+      } else {
+        // Clear if "Otro"
+        newData.acudiente_nombre = "";
+        newData.acudiente_documento = "";
+        newData.acudiente_celular = "";
+        newData.acudiente_email = "";
+      }
+      return newData;
+    });
+  };
+
+  const handleNext = () => {
+    // Aquí se podría implementar validación HTML5 manual si se desea antes de avanzar
+    setCurrentStep(prev => prev + 1);
+    window.scrollTo(0, 0);
+  };
+
+  const handlePrev = () => {
+    setCurrentStep(prev => prev - 1);
+    window.scrollTo(0, 0);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      // Guardar usando el servicio existente de estudiantes
+      // Nota: El servicio anterior guardaba en estructura anidada { student: {}, father: {} }
+      // Ahora lo enviamos todo plano, debes actualizar studentService o la tabla si es necesario
+      await saveStudent(formData);
+      setIsSuccess(true);
+    } catch (error) {
+      console.error(error);
+      toast.error("Ocurrió un error al enviar tu solicitud.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const getSubtitle = () => {
-    if (step === 1) return "Por favor, verifica y actualiza la información requerida para el nuevo periodo escolar.";
-    if (step === 2) return "Por favor, verifica y actualiza la información de los padres o tutores.";
-    return "Por favor, completa la información requerida para mantener actualizado el expediente del estudiante.";
-  };
+  if (isLoading) {
+    return (
+      <div className="bg-gray-100 dark:bg-slate-900 min-h-screen font-nunito flex items-center justify-center">
+        <p className="text-slate-500 font-bold text-lg animate-pulse">Cargando formulario...</p>
+      </div>
+    );
+  }
 
-  return (
-    <>
-      <Toaster position="top-right" reverseOrder={false} />
-
-      {/* Modal de Alerta Grande */}
-      {modal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 border border-gray-100 dark:border-slate-700/50 text-center relative max-h-[90vh] overflow-y-auto transform scale-100 transition-transform">
-
-            {modal.type === "error" ? (
-              <div className="w-16 h-16 mx-auto text-red-500 bg-red-50 dark:bg-red-950/20 p-3 rounded-full mb-4 flex items-center justify-center">
-                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-              </div>
-            ) : (
-              <div className="w-16 h-16 mx-auto text-green-600 bg-green-50 dark:bg-green-950/20 p-3 rounded-full mb-4 flex items-center justify-center">
-                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path>
-                </svg>
-              </div>
-            )}
-
-            <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white mb-2">
-              {modal.title}
-            </h2>
-            <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base mb-6 leading-relaxed">
-              {modal.message}
+  if (isSuccess) {
+    return (
+      <div className="bg-gray-100 dark:bg-slate-900 min-h-screen font-nunito flex flex-col items-center">
+        <div className="w-full max-w-2xl px-4 py-12 flex flex-col items-center justify-center mt-20">
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-slate-700 text-center">
+            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-extrabold text-slate-800 dark:text-white mb-4">¡Registro Exitoso!</h2>
+            <p className="text-slate-600 dark:text-slate-300 mb-8 max-w-md mx-auto">
+              Los datos del estudiante han sido guardados correctamente en la base de datos.
             </p>
-
-            <button
-              type="button"
-              onClick={closeModal}
-              className={`w-full font-bold px-6 py-3 rounded-lg transition-colors cursor-pointer select-none text-white outline-none ${modal.type === "error"
-                  ? "bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-200"
-                  : "bg-[#0e704d] hover:bg-green-700 focus:ring-4 focus:ring-green-200"
-                }`}
-            >
-              Entendido
+            <button onClick={() => window.location.href = '/'} className="bg-Sam text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-green-700 transition-colors">
+              Volver al Inicio
             </button>
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* Contenido principal centrado */}
-      <main className="flex justify-center items-center flex-col w-full max-w-5xl px-4 mx-auto pb-12 transition-colors duration-300">
+  const getColSpanClass = (width) => {
+    switch (width) {
+      case "1/2": return "col-span-12 md:col-span-6";
+      case "1/3": return "col-span-12 md:col-span-4";
+      case "2/3": return "col-span-12 md:col-span-8";
+      case "full": default: return "col-span-12";
+    }
+  };
 
-        {/* Título de la página y subtítulo dinámico */}
-        <h1 className="text-[1.8rem] md:text-[2.5rem] mt-10 font-bold text-slate-800 dark:text-slate-100 transition-colors duration-300 text-center">
-          Actualización de Datos
-        </h1>
-        <p className="md:text-[1.1rem] text-slate-500 dark:text-slate-400 mt-2 transition-colors duration-300 text-center max-w-xl leading-relaxed">
-          {getSubtitle()}
-        </p>
+  const isMultiStep = schema?.layoutStyle === "multi_step";
+  
+  // Renderiza una sola sección (caja)
+  const renderSection = (section, idx) => (
+    <div key={section.id} className="pt-2 mb-10">
+      <h2 className="text-lg font-extrabold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3 border-b border-gray-100 dark:border-slate-700 pb-3">
+        <span className="bg-Sam text-white w-7 h-7 rounded-full flex items-center justify-center text-sm">
+          {isMultiStep ? currentStep + 1 : idx + 1}
+        </span>
+        {section.title}
+      </h2>
 
-        {/* Stepper Indicator - Desktop */}
-        <div className="hidden md:flex items-center justify-center w-full max-w-2xl my-8 relative px-10">
-          {/* Línea conector base (gris) */}
-          <div className="absolute top-4.5 left-16 right-16 h-0.5 bg-gray-200 dark:bg-slate-700 z-0" />
-
-          {/* Línea conector activa (verde) */}
-          <div
-            className="absolute top-4.5 left-16 h-0.5 bg-Sam transition-all duration-300 z-0"
-            style={{
-              width: step === 1 ? "0%" : step === 2 ? "50%" : "100%"
-            }}
-          />
-
-          <div className="flex justify-between w-full relative z-10">
-            {/* Paso 1 */}
-            <div className="flex flex-col items-center gap-2">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border-2 ${step >= 1
-                  ? "bg-Sam border-Sam text-white"
-                  : "bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-500"
-                }`}>
-                {step > 1 ? "✓" : "1"}
-              </div>
-              <span className={`text-xs font-bold transition-colors duration-300 ${step >= 1 ? "text-Sam dark:text-green-400" : "text-gray-500 dark:text-slate-400"
-                }`}>
-                Estudiante
-              </span>
-            </div>
-
-            {/* Paso 2 */}
-            <div className="flex flex-col items-center gap-2">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border-2 ${step === 2
-                  ? "bg-white dark:bg-slate-800 border-Sam text-Sam dark:text-green-400 ring-4 ring-Sam/20"
-                  : step > 2
-                    ? "bg-Sam border-Sam text-white"
-                    : "bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-500 dark:text-slate-400"
-                }`}>
-                {step > 2 ? "✓" : "2"}
-              </div>
-              <span className={`text-xs font-bold transition-colors duration-300 ${step >= 2 ? "text-slate-800 dark:text-slate-200" : "text-gray-500 dark:text-slate-400"
-                }`}>
-                Padres
-              </span>
-            </div>
-
-            {/* Paso 3 */}
-            <div className="flex flex-col items-center gap-2">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border-2 ${step === 3
-                  ? "bg-Sam border-Sam text-white ring-4 ring-Sam/20"
-                  : "bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-500 dark:text-slate-400"
-                }`}>
-                3
-              </div>
-              <span className={`text-xs font-bold transition-colors duration-300 ${step === 3 ? "text-Sam dark:text-green-400" : "text-gray-500 dark:text-slate-400"
-                }`}>
-                Acudiente
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Stepper Indicator - Mobile */}
-        <div className="md:hidden w-full my-6 px-2">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Paso {step} de 3: {step === 1 ? "Datos del Estudiante" : step === 2 ? "Datos de los Padres" : "Datos del Acudiente"}
-            </span>
-            <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">{Math.round((step / 3) * 100)}%</span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
-            <div
-              className="bg-Sam dark:bg-green-500 h-full transition-all duration-300"
-              style={{ width: `${(step / 3) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Formulario Principal con FormProvider */}
-        <FormProvider {...methods}>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="w-full bg-white dark:bg-slate-800 shadow-xl rounded-2xl p-6 md:p-10 border border-gray-100 dark:border-slate-700 relative overflow-hidden"
-          >
-            {isSubmitting && (
-              <div className="absolute inset-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm z-40 flex items-center justify-center">
-                <div className="flex flex-col items-center">
-                  <svg className="animate-spin h-10 w-10 text-Sam dark:text-green-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      <div className="grid grid-cols-12 gap-6">
+        {section.elements.map((el, elIdx) => {
+          if (el.type === "divider") return <div key={elIdx} className="col-span-12 my-2 border-t border-gray-200 dark:border-slate-700"></div>;
+          
+          if (el.type === "alert") {
+            const icons = {
+              info: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+              warning: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z",
+              success: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+              star: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+            };
+            return (
+              <div key={elIdx} className={getColSpanClass(el.width)}>
+                <div 
+                  className="flex items-start gap-4 p-5 rounded-2xl border"
+                  style={{ 
+                    backgroundColor: `color-mix(in srgb, ${el.alertColor || '#3b82f6'} 10%, white)`,
+                    borderColor: `color-mix(in srgb, ${el.alertColor || '#3b82f6'} 20%, transparent)` 
+                  }}
+                >
+                  <svg className="w-6 h-6 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ color: el.alertColor || '#3b82f6' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={icons[el.icon || "info"]} />
                   </svg>
-                  <p className="font-bold text-slate-700 dark:text-slate-300">Guardando información...</p>
+                  <p className="text-sm font-semibold leading-relaxed" style={{ color: el.alertColor || '#3b82f6' }}>
+                    {el.text}
+                  </p>
                 </div>
               </div>
-            )}
+            );
+          }
 
-            <fieldset disabled={isSubmitting}>
-              {/* Vistas por paso */}
-              <div className="min-h-[400px]">
-                {step === 1 && <Student />}
-                {step === 2 && (
-                  <div className="flex flex-col gap-10 animate-fade-in">
-                    <Father />
-                    <Mother />
+          if (el.type === "button") {
+            return (
+              <div key={elIdx} className="col-span-12 flex justify-center my-2">
+                <a href={el.actionUrl || "#"} target="_blank" rel="noopener noreferrer" className="px-6 py-2 bg-blue-50 text-blue-600 font-bold rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors">
+                  {el.label}
+                </a>
+              </div>
+            );
+          }
+
+          if (!el.visible) return null;
+
+          if (el.inputType === "custom_parentesco") {
+            const hasMadre = !!formData.madre_nombre;
+            const hasPadre = !!formData.padre_nombre;
+            const current = formData.acudiente_parentesco;
+
+            return (
+              <div key={el.id} className={getColSpanClass(el.width)}>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">
+                  {el.label} {el.required && <span className="text-red-500">*</span>}
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button 
+                    type="button" 
+                    disabled={!hasMadre}
+                    onClick={() => handleParentescoSelect("Madre")}
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold border transition-all ${!hasMadre ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-50' : current === "Madre" ? 'bg-Sam text-white border-Sam' : 'bg-white text-slate-700 border-gray-300 hover:border-Sam'}`}
+                  >
+                    Madre
+                  </button>
+                  <button 
+                    type="button" 
+                    disabled={!hasPadre}
+                    onClick={() => handleParentescoSelect("Padre")}
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold border transition-all ${!hasPadre ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-50' : current === "Padre" ? 'bg-Sam text-white border-Sam' : 'bg-white text-slate-700 border-gray-300 hover:border-Sam'}`}
+                  >
+                    Padre
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => handleParentescoSelect("Otro")}
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold border transition-all ${current === "Otro" ? 'bg-Sam text-white border-Sam' : 'bg-white text-slate-700 border-gray-300 hover:border-Sam'}`}
+                  >
+                    Otro
+                  </button>
+                </div>
+                {!current && el.required && (
+                  <p className="text-red-500 text-xs mt-2">Debe seleccionar un acudiente</p>
+                )}
+              </div>
+            );
+          }
+
+          // If the element is acudiente_nombre, etc., and Parentesco is NOT "Otro", we might want to hide them or make them readonly.
+          // The image shows that when "Padre" is selected, the inputs ARE visible and prefilled. So we just render them normally!
+          
+          return (
+            <div key={el.id} className={getColSpanClass(el.width)}>
+              {el.inputType === "checkbox" ? (
+                <div 
+                  className="flex items-start gap-3 mt-2 p-4 rounded-2xl border-2 border-dashed hover:opacity-90 transition-opacity"
+                  style={{ 
+                    backgroundColor: `color-mix(in srgb, ${el.checkboxColor || '#0e704d'} 10%, white)`,
+                    borderColor: `color-mix(in srgb, ${el.checkboxColor || '#0e704d'} 50%, transparent)` 
+                  }}
+                >
+                  <div className="flex h-6 items-center">
+                    <input type="checkbox" name={el.id} checked={formData[el.id] || false} onChange={handleChange} required={el.required} className="w-5 h-5 cursor-pointer" style={{ accentColor: el.checkboxColor || '#0e704d' }} />
                   </div>
-                )}
-                {step === 3 && <Attendant />}
-              </div>
-
-              {/* Controles de Navegación */}
-              <div className="flex justify-between mt-10 pt-6 border-t border-gray-100 dark:border-slate-700">
-                {step > 1 ? (
-                  <button
-                    type="button"
-                    onClick={handleBack}
-                    className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-slate-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors cursor-pointer outline-none focus:ring-2 focus:ring-gray-300"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 12H5M12 19l-7-7 7-7"></path>
-                    </svg>
-                    <span>Anterior</span>
-                  </button>
-                ) : (
-                  <div></div>
-                )}
-
-                {step < 3 ? (
-                  <button
-                    type="button"
-                    onClick={handleNext}
-                    className="flex items-center gap-2 bg-Sam hover:bg-green-700 text-white font-bold px-8 py-3 rounded-lg transition-all shadow-md hover:shadow-lg cursor-pointer outline-none focus:ring-4 focus:ring-green-200"
-                  >
-                    <span>Siguiente</span>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"></path>
-                    </svg>
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    className="flex items-center gap-2 bg-[#0e704d] hover:bg-green-700 text-white font-bold px-10 py-3 rounded-lg transition-all shadow-md hover:shadow-lg cursor-pointer outline-none focus:ring-4 focus:ring-green-200"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>Guardando...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Guardar Cambios</span>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                      </>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-extrabold cursor-pointer" style={{ color: el.checkboxColor || '#0e704d' }} onClick={() => setFormData(prev => ({ ...prev, [el.id]: !prev[el.id] }))}>
+                      {el.label} {el.required && <span className="text-red-500">*</span>}
+                    </label>
+                    {el.helpText && (
+                      <p className="text-xs mt-1 cursor-pointer opacity-80" style={{ color: el.checkboxColor || '#0e704d' }} onClick={() => setFormData(prev => ({ ...prev, [el.id]: !prev[el.id] }))}>
+                        {el.helpText}
+                      </p>
                     )}
-                  </button>
-                )}
-              </div>
-            </fieldset>
-          </form>
-        </FormProvider>
-      </main>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
+                    {el.label} {el.required && <span className="text-red-500">*</span>}
+                  </label>
+                  {el.helpText && <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-2 leading-tight">{el.helpText}</p>}
+                  
+                  {el.inputType === "textarea" ? (
+                    <textarea name={el.id} required={el.required} value={formData[el.id] || ""} onChange={handleChange} placeholder={el.placeholder || ""} rows="3" className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-Sam/50 transition-all text-sm"></textarea>
+                  ) : el.inputType === "select" ? (
+                    <select name={el.id} required={el.required} value={formData[el.id] || ""} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-Sam/50 transition-all text-sm appearance-none font-semibold">
+                      <option value="" disabled>Seleccionar...</option>
+                      {el.options?.split(',').map((opt, i) => <option key={i} value={opt.trim()}>{opt.trim()}</option>)}
+                    </select>
+                  ) : (
+                    <input type={el.inputType} name={el.id} required={el.required} value={formData[el.id] || ""} onChange={handleChange} placeholder={el.placeholder || ""} className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-Sam/50 transition-all text-sm" />
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
-      {/* Botón Flotante de WhatsApp */}
-      <a
-        href="https://wa.me/573103794759"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-40 hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center cursor-pointer filter drop-shadow-md hover:drop-shadow-lg"
-        aria-label="Chatear por WhatsApp"
-      >
-        <svg className="w-16 h-16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fillRule="evenodd" clipRule="evenodd" d="M16 31C23.732 31 30 24.732 30 17C30 9.26801 23.732 3 16 3C8.26801 3 2 9.26801 2 17C2 19.5109 2.661 21.8674 3.81847 23.905L2 31L9.31486 29.3038C11.3014 30.3854 13.5789 31 16 31ZM16 28.8462C22.5425 28.8462 27.8462 23.5425 27.8462 17C27.8462 10.4576 22.5425 5.15385 16 5.15385C9.45755 5.15385 4.15385 10.4576 4.15385 17C4.15385 19.5261 4.9445 21.8675 6.29184 23.7902L5.23077 27.7692L9.27993 26.7569C11.1894 28.0746 13.5046 28.8462 16 28.8462Z" fill="#BFC8D0" />
-          <path d="M28 16C28 22.6274 22.6274 28 16 28C13.4722 28 11.1269 27.2184 9.19266 25.8837L5.09091 26.9091L6.16576 22.8784C4.80092 20.9307 4 18.5589 4 16C4 9.37258 9.37258 4 16 4C22.6274 4 28 9.37258 28 16Z" fill="url(#paint0_linear_87_7264)" />
-          <path fillRule="evenodd" clipRule="evenodd" d="M16 30C23.732 30 30 23.732 30 16C30 8.26801 23.732 2 16 2C8.26801 2 2 8.26801 2 16C2 18.5109 2.661 20.8674 3.81847 22.905L2 30L9.31486 28.3038C11.3014 29.3854 13.5789 30 16 30ZM16 27.8462C22.5425 27.8462 27.8462 22.5425 27.8462 16C27.8462 9.45755 22.5425 4.15385 16 4.15385C9.45755 4.15385 4.15385 9.45755 4.15385 16C4.15385 18.5261 4.9445 20.8675 6.29184 22.7902L5.23077 26.7692L9.27993 25.7569C11.1894 27.0746 13.5046 27.8462 16 27.8462Z" fill="white" />
-          <path d="M12.5 9.49989C12.1672 8.83131 11.6565 8.8905 11.1407 8.8905C10.2188 8.8905 8.78125 9.99478 8.78125 12.05C8.78125 13.7343 9.52345 15.578 12.0244 18.3361C14.438 20.9979 17.6094 22.3748 20.2422 22.3279C22.875 22.2811 23.4167 20.0154 23.4167 19.2503C23.4167 18.9112 23.2062 18.742 23.0613 18.696C22.1641 18.2654 20.5093 17.4631 20.1328 17.3124C19.7563 17.1617 19.5597 17.3656 19.4375 17.4765C19.0961 17.8018 18.4193 18.7608 18.1875 18.9765C17.9558 19.1922 17.6103 19.083 17.4665 19.0015C16.9374 18.7892 15.5029 18.1511 14.3595 17.0426C12.9453 15.6718 12.8623 15.2001 12.5959 14.7803C12.3828 14.4444 12.5392 14.2384 12.6172 14.1483C12.9219 13.7968 13.3426 13.254 13.5313 12.9843C13.7199 12.7145 13.5702 12.305 13.4803 12.05C13.0938 10.953 12.7663 10.0347 12.5 9.49989Z" fill="white" />
-          <defs>
-            <linearGradient id="paint0_linear_87_7264" x1="26.5" y1="7" x2="4" y2="28" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#5BD066" />
-              <stop offset="1" stopColor="#27B43E" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </a>
-    </>
+  return (
+    <div className="bg-gray-100 dark:bg-slate-900 min-h-screen font-nunito text-slate-800 dark:text-slate-100 pb-16">
+      <Toaster position="top-right" />
+
+      <main className="max-w-4xl mx-auto px-4 pt-10">
+        <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 dark:border-slate-700">
+          
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-extrabold text-Sam mb-4">{schema?.title || "Formulario"}</h1>
+            <p className="text-sm text-slate-500 max-w-2xl mx-auto">
+              {schema?.description}
+            </p>
+          </div>
+
+          {isMultiStep ? (
+            // ================= MODO MULTI-PASO =================
+            <div className="mb-8">
+              {/* Progress Bar */}
+              <div className="flex justify-between mb-2">
+                <span className="text-xs font-bold text-slate-500">Paso {currentStep + 1} de {schema?.sections?.length}</span>
+                <span className="text-xs font-bold text-Sam">{Math.round(((currentStep + 1) / schema?.sections?.length) * 100)}% Completado</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-8">
+                <div className="bg-Sam h-2 rounded-full transition-all duration-300" style={{ width: `${((currentStep + 1) / schema?.sections?.length) * 100}%` }}></div>
+              </div>
+
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                if (currentStep === schema.sections.length - 1) handleSubmit(e);
+                else handleNext();
+              }}>
+                {renderSection(schema.sections[currentStep], currentStep)}
+                
+                <div className="flex justify-between pt-8 border-t border-gray-200 dark:border-slate-700">
+                  <button 
+                    type="button" 
+                    onClick={handlePrev} 
+                    className={`px-6 py-3 font-bold rounded-full ${currentStep === 0 ? 'opacity-0 pointer-events-none' : 'bg-gray-100 hover:bg-gray-200 text-slate-600 transition-colors'}`}
+                  >
+                    Atrás
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="bg-Sam hover:bg-green-800 text-white px-8 py-3 rounded-full font-bold shadow-md transition-all flex items-center gap-2"
+                  >
+                    {currentStep === schema.sections.length - 1 ? (
+                      isSubmitting ? "Procesando..." : (schema?.submitText || "Finalizar")
+                    ) : "Siguiente Paso →"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            // ================= MODO PÁGINA ÚNICA =================
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {schema?.sections?.map((section, idx) => renderSection(section, idx))}
+              
+              <div className="pt-8 text-center border-t border-gray-200 dark:border-slate-700">
+                <button type="submit" disabled={isSubmitting} className="w-full md:w-auto bg-Sam hover:bg-green-800 text-white px-10 py-4 rounded-full font-bold shadow-lg disabled:opacity-70 transition-all">
+                  {isSubmitting ? "Procesando solicitud..." : (schema?.submitText || "Enviar Formulario")}
+                </button>
+              </div>
+            </form>
+          )}
+
+        </div>
+      </main>
+    </div>
   );
 }

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { subscribeToStudents, saveStudent } from "../../../services/studentService";
 import { subscribeToClassrooms } from "../../../services/classroomService";
 import { useAuthStore } from "../../../store/useAuthStore";
+import { exportToExcel } from "../../../utils/exportExcel";
 import toast from "react-hot-toast";
 
 export function StudentsList() {
@@ -12,6 +13,8 @@ export function StudentsList() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedGradeFilter, setSelectedGradeFilter] = useState("TODOS");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
 
   // Modal nuevo estudiante
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,6 +127,32 @@ export function StudentsList() {
     const salonMatch = studentSalon.toLowerCase().includes(term);
     return docMatch || nameMatch || aspiradoMatch || salonMatch;
   });
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedGradeFilter]);
+
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage) || 1;
+  const paginatedStudents = filteredStudents.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handleExport = () => {
+    const dataToExport = filteredStudents.map(s => ({
+      "Documento": s.student_doc,
+      "Nombres": s.student_name,
+      "Apellidos": s.student_lastname,
+      "Grado Aspirado": s.grado_aspirado || s.student_grade || "Sin Definir",
+      "Salón Asignado": s.student_grade_section || "Sin Asignar",
+      "Acudiente Principal": s.attendant_name ? `${s.attendant_name} ${s.attendant_lastname}` : "No definido",
+      "Teléfono Acudiente": s.attendant_phone || "",
+      "Estado": s.estado || "Activo"
+    }));
+    
+    exportToExcel(dataToExport, `Listado_Estudiantes_${new Date().toISOString().split('T')[0]}`);
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -248,6 +277,15 @@ export function StudentsList() {
               placeholder="Buscar por documento, nombre o grado..."
               className="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-2.5 w-full md:w-64 rounded-xl border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-Sam outline-none text-xs"
             />
+            <button
+              onClick={handleExport}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs whitespace-nowrap cursor-pointer transition-colors shadow-sm flex items-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Excel
+            </button>
             {user?.rol === "admin" && (
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -282,7 +320,7 @@ export function StudentsList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                {filteredStudents.map((student, idx) => (
+                {paginatedStudents.map((student, idx) => (
                   <tr key={student.student_doc || idx} className="text-xs hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
                     <td className="p-3 font-mono text-slate-700 dark:text-slate-300">{student.student_doc}</td>
                     <td className="p-3 font-bold text-slate-800 dark:text-slate-200">
@@ -294,22 +332,21 @@ export function StudentsList() {
                       </span>
                     </td>
                     <td className="p-3">
-                      <span className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] ${
-                        student.student_grade_section && student.student_grade_section !== "Sin Asignar" && student.student_grade_section !== "SIN ASIGNAR"
-                          ? "bg-green-100 dark:bg-green-950/60 text-green-800 dark:text-green-300"
-                          : "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300"
-                      }`}>
-                        {student.student_grade_section && student.student_grade_section !== "Sin Asignar" && student.student_grade_section !== "SIN ASIGNAR" ? student.student_grade_section : "Sin Asignar"}
-                      </span>
+                      {student.student_grade_section && student.student_grade_section !== "Sin Asignar" && student.student_grade_section !== "SIN ASIGNAR" ? (
+                        <span className="bg-Sam/20 text-Sam px-2 py-0.5 rounded text-[11px] font-bold">
+                          {student.student_grade_section}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-slate-400">Sin Asignar</span>
+                      )}
                     </td>
-                    <td className="p-3 text-slate-700 dark:text-slate-300">
-                      {student.attendant_name} {student.attendant_lastname} <br/>
-                      <span className="text-[11px] text-slate-400">{student.attendant_phone}</span>
+                    <td className="p-3 text-slate-600 dark:text-slate-400 capitalize">
+                      {student.attendant_name ? `${student.attendant_name} ${student.attendant_lastname}` : "No definido"}
                     </td>
                     <td className="p-3 text-right">
-                      <Link 
+                      <Link
                         to={`/admin/estudiante/${student.student_doc}`}
-                        className="bg-Sam/10 hover:bg-Sam text-Sam hover:text-white font-bold px-3 py-1.5 rounded-xl transition-all inline-block"
+                        className="text-Sam hover:text-green-700 font-bold px-3 py-1.5 bg-green-50 dark:bg-green-900/30 rounded-lg hover:bg-green-100 transition-colors inline-block"
                       >
                         Ver Perfil
                       </Link>
@@ -320,12 +357,37 @@ export function StudentsList() {
             </table>
           )}
         </div>
+
+        {/* Controles de Paginación */}
+        {!isLoading && filteredStudents.length > 0 && (
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100 dark:border-slate-700 text-xs">
+            <span className="text-slate-500 dark:text-slate-400">
+              Página {currentPage} de {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium cursor-pointer"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium cursor-pointer"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal Nuevo Estudiante */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-lg w-full p-6 md:p-8 border border-gray-100 dark:border-slate-700">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-lg w-full p-6 md:p-8 border border-gray-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-slate-800 dark:text-white">Registrar Nuevo Estudiante</h3>
               <button 

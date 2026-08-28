@@ -10,6 +10,7 @@ import {
 } from "../../../services/classroomService";
 import { subscribeToProfessors } from "../../../services/authService";
 import { subscribeToStudents } from "../../../services/studentService";
+import { exportToExcel } from "../../../utils/exportExcel";
 
 export function ClassroomsManager() {
   const [activeSubTab, setActiveSubTab] = useState("salones"); // "salones" | "distribucion"
@@ -212,6 +213,19 @@ export function ClassroomsManager() {
 
     return matchesRoom && matchesSearch;
   });
+
+  const handleExportClassroom = () => {
+    if (!selectedClassroomId) return;
+    const dataToExport = studentsInSelectedClassroom.map(s => ({
+      "Documento": s.student_doc,
+      "Nombres": s.student_name,
+      "Apellidos": s.student_lastname,
+      "Grado Aspirado": s.grado_aspirado || s.student_grade || "Sin Definir",
+      "Salón Asignado": s.student_grade_section || "Sin Asignar",
+      "Estado": s.estado || "Activo"
+    }));
+    exportToExcel(dataToExport, `Listado_Salon_${selectedClassroomId}_${new Date().toISOString().split('T')[0]}`);
+  };
 
   // Distribuidor Masivo (Sub-pestaña 2)
   const studentsToDistribute = students.filter(s => {
@@ -562,6 +576,16 @@ export function ClassroomsManager() {
                       placeholder="🔍 Buscar estudiante..."
                       className="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-2.5 w-full sm:w-64 rounded-xl border border-gray-300 dark:border-slate-600 outline-none text-xs"
                     />
+
+                    <button
+                      onClick={handleExportClassroom}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-sm whitespace-nowrap w-full sm:w-auto justify-center"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Excel
+                    </button>
 
                     {selectedClassroomStudentDocs.length > 0 && (
                       <button
