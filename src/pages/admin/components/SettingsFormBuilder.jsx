@@ -64,7 +64,9 @@ export function SettingsFormBuilder() {
           title: schema.title || "",
           description: schema.description || "",
           submitText: schema.submitText || "Enviar",
-          layoutStyle: schema.layoutStyle || "single_page"
+          layoutStyle: schema.layoutStyle || "single_page",
+          path: schema.path || `/${id}`,
+          isActive: schema.isActive !== false // Default true
         });
         
         // Handle migration from flat fields to sections
@@ -105,6 +107,8 @@ export function SettingsFormBuilder() {
         description: formMeta.description,
         submitText: formMeta.submitText,
         layoutStyle: formMeta.layoutStyle || "single_page",
+        path: formMeta.path,
+        isActive: formMeta.isActive,
         sections: sections
       };
       await saveFormFullSchema(currentFormId, payload);
@@ -213,6 +217,22 @@ export function SettingsFormBuilder() {
     }
   };
 
+  const handleToggleActive = async (formObj) => {
+    const isActivating = formObj.isActive === false;
+    if (!window.confirm(`¿Estás seguro de que deseas ${isActivating ? 'ACTIVAR' : 'DESACTIVAR'} este formulario?\n\n${!isActivating ? 'El público ya no podrá acceder a este formulario.' : 'El formulario volverá a estar disponible para el público.'}`)) {
+      return;
+    }
+    
+    try {
+      const updatedForm = { ...formObj, isActive: isActivating };
+      await saveFormFullSchema(formObj.id, updatedForm);
+      setFormsList(formsList.map(f => f.id === formObj.id ? updatedForm : f));
+      toast.success(updatedForm.isActive ? "Formulario Activado" : "Formulario Desactivado");
+    } catch (e) {
+      toast.error("Error al cambiar estado");
+    }
+  };
+
   if (user?.rol !== "superadmin") return null;
 
   return (
@@ -237,13 +257,27 @@ export function SettingsFormBuilder() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formsList.map(f => (
-                <div key={f.id} className="border border-gray-200 dark:border-slate-700 rounded-2xl p-5 bg-gray-50 dark:bg-slate-900/50 hover:border-Sam/50 transition-colors">
-                  <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-1 truncate">{f.title || f.id}</h3>
-                  <code className="text-[10px] bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 block w-fit mb-4">ID: {f.id}</code>
+                <div key={f.id} className={`border-2 rounded-2xl p-5 transition-colors ${f.isActive !== false ? 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50' : 'border-red-200 bg-red-50/30'}`}>
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-bold text-lg text-slate-800 dark:text-white truncate">{f.title || f.id}</h3>
+                    <button 
+                      onClick={() => handleToggleActive(f)}
+                      className={`text-[10px] px-2 py-1 rounded-full font-bold transition-colors ${f.isActive !== false ? 'bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-700' : 'bg-red-100 text-red-700 hover:bg-green-100 hover:text-green-700'}`}
+                      title={f.isActive !== false ? "Desactivar" : "Activar"}
+                    >
+                      {f.isActive !== false ? "ACTIVO" : "INACTIVO"}
+                    </button>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1 mb-4">
+                    <span className="text-[11px] text-blue-600 font-mono truncate bg-blue-50 px-2 py-0.5 rounded w-fit">Ruta: {f.path || `/${f.id}`}</span>
+                    <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 font-mono w-fit truncate">ID: {f.id}</span>
+                  </div>
+
                   <div className="flex gap-2">
-                    <button onClick={() => handleEditForm(f.id)} className="flex-1 bg-white border border-gray-300 hover:border-Sam py-2 rounded-lg font-bold text-xs">✏️ Editar</button>
+                    <button onClick={() => handleEditForm(f.id)} className="flex-1 bg-white border border-gray-300 hover:border-Sam py-2 rounded-lg font-bold text-xs shadow-sm">✏️ Editar</button>
                     {f.id !== "teacher_form" && f.id !== "student_form" && (
-                      <button onClick={() => handleDeleteForm(f.id)} className="px-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg">🗑️</button>
+                      <button onClick={() => handleDeleteForm(f.id)} className="px-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg shadow-sm">🗑️</button>
                     )}
                   </div>
                 </div>
@@ -282,6 +316,17 @@ export function SettingsFormBuilder() {
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Botón Final</label>
                 <input type="text" value={formMeta.submitText} onChange={e => setFormMeta({...formMeta, submitText: e.target.value})} className="w-full p-2.5 rounded-xl border bg-white dark:bg-slate-800" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Ruta Pública (URL Path)</label>
+                <input type="text" value={formMeta.path || ""} onChange={e => setFormMeta({...formMeta, path: e.target.value})} placeholder="Ej. /estudiantes, /encuesta" className="w-full p-2.5 rounded-xl border bg-white dark:bg-slate-800" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Estado del Formulario</label>
+                <div className="flex items-center gap-2 mt-2">
+                  <input type="checkbox" id="isActiveForm" checked={formMeta.isActive} onChange={e => setFormMeta({...formMeta, isActive: e.target.checked})} className="w-5 h-5 cursor-pointer accent-Sam" />
+                  <label htmlFor="isActiveForm" className="cursor-pointer font-bold text-sm">{formMeta.isActive ? 'Activo (Público)' : 'Inactivo (Cerrado)'}</label>
+                </div>
               </div>
               <div className="md:col-span-3">
                 <label className="text-xs font-bold text-slate-500 uppercase block mb-1">Instrucciones</label>

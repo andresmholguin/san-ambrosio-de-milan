@@ -32,6 +32,14 @@ export async function getFormSchema(formId) {
   return null;
 }
 
+export async function getFormSchemaByPath(path) {
+  const forms = await getAllForms();
+  return forms.find(f => {
+    const formPath = f.path || `/${f.id}`;
+    return formPath === path;
+  }) || null;
+}
+
 /**
  * Guarda o actualiza un formulario completo (Metadata + Fields).
  */

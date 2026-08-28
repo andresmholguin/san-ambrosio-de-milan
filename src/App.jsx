@@ -30,7 +30,11 @@ export default function App() {
       <Header theme={theme} setTheme={setTheme} />
       
       <Routes>
+        {/* Formularios Públicos (Motor Dinámico) */}
         <Route path="/" element={<UpdateForm />} />
+        <Route path="/:formPath" element={<UpdateForm />} />
+        
+        {/* Otras Rutas */}
         <Route path="/profesor" element={<TeacherRegistration />} />
         <Route path="/admin/*" element={<Admin />} />
         <Route path="/justificar-inasistencia/:token" element={<JustifyAbsence />} />

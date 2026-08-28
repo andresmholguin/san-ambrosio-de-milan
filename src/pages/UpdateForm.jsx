@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
-import { getFormSchema } from "../services/formSchemaService";
+import { getFormSchemaByPath, getFormSchema } from "../services/formSchemaService";
 import { saveStudent } from "../services/studentService";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "../firebase/config";
+import { useLocation } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function UpdateForm() {
@@ -9,22 +12,39 @@ export default function UpdateForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState({});
+  const [errorMsg, setErrorMsg] = useState("");
+  const location = useLocation();
   
   // Wizard State
   const [currentStep, setCurrentStep] = useState(0); // Index de la sección actual
 
   useEffect(() => {
     loadSchema();
-  }, []);
+  }, [location.pathname]);
 
   const loadSchema = async () => {
+    setIsLoading(true);
+    setErrorMsg("");
     try {
-      const data = await getFormSchema("student_form");
+      // First try to load by path
+      let data = await getFormSchemaByPath(location.pathname);
+      
+      // Fallback for root path just in case the db seed hasn't updated its path yet
+      if (!data && location.pathname === "/") {
+        data = await getFormSchema("student_form");
+      }
+
       if (data) {
+        if (data.isActive === false) {
+          setErrorMsg("Este formulario está cerrado o inactivo temporalmente.");
+          setSchema(null);
+          return;
+        }
+
         setSchema(data);
         const initialData = {};
-        data.sections.forEach(sec => {
-          sec.elements.forEach(el => {
+        data.sections?.forEach(sec => {
+          sec.elements?.forEach(el => {
             if (el.type === "field" && el.id) {
               initialData[el.id] = el.inputType === 'checkbox' ? false : "";
             }
@@ -32,7 +52,7 @@ export default function UpdateForm() {
         });
         setFormData(initialData);
       } else {
-        toast.error("El esquema del formulario de estudiantes no fue encontrado.");
+        setErrorMsg("El formulario solicitado no existe.");
       }
     } catch (error) {
       toast.error("Error al cargar la configuración del formulario.");
@@ -117,6 +137,26 @@ export default function UpdateForm() {
       setIsSubmitting(false);
     }
   };
+
+  if (errorMsg) {
+    return (
+      <div className="bg-gray-100 dark:bg-slate-900 min-h-screen font-nunito flex flex-col items-center">
+        <div className="w-full max-w-2xl px-4 py-12 flex flex-col items-center justify-center mt-20">
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-slate-700 text-center">
+            <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white mb-4">Acceso Restringido</h2>
+            <p className="text-slate-600 dark:text-slate-300 mb-8 max-w-md mx-auto">
+              {errorMsg}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
